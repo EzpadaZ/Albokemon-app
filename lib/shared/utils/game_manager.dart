@@ -15,7 +15,7 @@ class GameManager {
 
   void init() {
     if (_init) return;
-    socket = SocketClient("http://192.168.1.64:3000");
+    socket = SocketClient("http://192.168.3.201:3001");
     session = Session(socket);
     _init = true;
   }

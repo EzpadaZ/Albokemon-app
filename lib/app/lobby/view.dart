@@ -116,7 +116,39 @@ class _LobbyViewState extends State<LobbyView> {
   Widget invite() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(children: [Text('You received an invite')]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '${_model.pendingInvite['fromName']} wants to battle!',
+            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+          ),
+          const SizedBox(height: 16),
+          WidgetButton(
+            label: 'ACCEPT',
+            width: 128,
+            height: 42,
+            onTap: () {
+              // _model.acceptInvite();
+            },
+            colorFill: ATheme.BACKGROUND_COLOR,
+            colorBorder: ATheme.TEXT_COLOR,
+            colorText: ATheme.TEXT_COLOR,
+          ),
+          const SizedBox(height: 8),
+          WidgetButton(
+            label: 'DECLINE',
+            width: 128,
+            height: 42,
+            onTap: () {
+              _model.declineInvite();
+            },
+            colorFill: ATheme.BACKGROUND_COLOR,
+            colorBorder: ATheme.TEXT_COLOR,
+            colorText: ATheme.TEXT_COLOR,
+          ),
+        ],
+      ),
     );
   }
 

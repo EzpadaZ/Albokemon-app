@@ -19,6 +19,8 @@ class LobbyViewModel extends ChangeNotifier {
   List<Map<String, dynamic>> users = [];
   String? error;
 
+  bool _inviteActionInFlight = false;
+
   LobbyViewModel() {
     _onUsers = (dynamic data) {
       var payload = _unwrap(data);
@@ -39,10 +41,11 @@ class LobbyViewModel extends ChangeNotifier {
 
       final reason = payload["reason"]?.toString();
 
-      Logger.instance.info('CANCELLED MATCH!!!!!!');
+      Logger.instance.info('Match declined: $reason');
 
       // if you were showing an invite modal, close/clear it
       pendingInvite = {};
+      sentInvites.removeLast();
       notifyListeners();
     };
 
@@ -102,18 +105,45 @@ class LobbyViewModel extends ChangeNotifier {
   }
 
   void acceptInvite() {
+    if (_inviteActionInFlight) return;
+
     final inv = pendingInvite;
     if (inv.isEmpty) return;
 
     final fromUserId = inv["fromUserId"]?.toString();
     if (fromUserId == null) return;
 
+    _inviteActionInFlight = true;
+
+    pendingInvite = {};
+    notifyListeners();
+
     GameManager.instance.socket.emit(SocketEvents.matchAccept, {
       "fromUserId": fromUserId,
     });
 
+    _inviteActionInFlight = false;
+  }
+
+  void declineInvite() {
+    if (_inviteActionInFlight) return;
+
+    final inv = pendingInvite;
+    if (inv.isEmpty) return;
+
+    final fromUserId = inv["fromUserId"]?.toString();
+    if (fromUserId == null) return;
+
+    _inviteActionInFlight = true;
+
     pendingInvite = {};
     notifyListeners();
+
+    GameManager.instance.socket.emit(SocketEvents.matchDecline, {
+      "fromUserId": fromUserId,
+    });
+
+    _inviteActionInFlight = false;
   }
 
   dynamic _unwrap(dynamic data) {
@@ -134,9 +164,11 @@ class LobbyViewModel extends ChangeNotifier {
     final s = GameManager.instance.socket;
     if (_onUsers != null) s.off(SocketEvents.lobbyUsers, _onUsers!);
     if (_onUpdated != null) s.off(SocketEvents.lobbyUpdated, _onUpdated!);
-    if (_onMatchInvite != null) s.off(SocketEvents.matchInvite, _onMatchInvite!);
+    if (_onMatchInvite != null)
+      s.off(SocketEvents.matchInvite, _onMatchInvite!);
     if (_onMatchStart != null) s.off(SocketEvents.matchStart, _onMatchStart!);
-    if (_onMatchDeclined != null) s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
+    if (_onMatchDeclined != null)
+      s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
     super.dispose();
   }
 }
