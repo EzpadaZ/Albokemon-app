@@ -36,7 +36,7 @@ class WidgetButton extends StatelessWidget {
     required this.colorText,
     this.colorDisabledFill = ATheme.DISABLED_COLOR,
     this.colorDisabledBorder = ATheme.DISABLED_COLOR,
-    this.colorDisabledText = ATheme.FOREGROUND_COLOR,
+    this.colorDisabledText = ATheme.TEXT_HINT,
     this.isEnabled = true,
     this.padding,
     this.width,

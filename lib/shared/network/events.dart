@@ -14,5 +14,9 @@ class SocketEvents {
   static const matchDecline = "match/decline";
   static const matchDeclined = "match/declined";
 
+  static const battleState = "battle/state";
+  static const battleSync = "battle/sync";
+  static const battleAttack = "battle/attack";
+
   static const err = "err";
 }

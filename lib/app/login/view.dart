@@ -1,3 +1,4 @@
+import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/theme.dart';
 import 'package:albokemon_app/shared/widgets/button.dart';
@@ -22,6 +23,7 @@ class _LoginViewState extends State<LoginView> {
   void initState() {
     // TODO: implement initState
     _model = new LoginViewModel();
+
     _model.addListener(() {
       setState(() {}); // allows the model to update the view.
     });
@@ -101,6 +103,17 @@ class _LoginViewState extends State<LoginView> {
             onTap: () async {
               Logger.instance.info("Content: ${_model.username}");
               await _model.execute();
+            },
+            colorFill: ATheme.BACKGROUND_COLOR,
+            colorBorder: ATheme.TEXT_COLOR,
+            colorText: ATheme.TEXT_COLOR,
+          ),
+          const SizedBox(height: 8,),
+          WidgetButton(
+            label: 'Ajustes',
+            height: 48,
+            onTap: () async {
+              // Nothing
             },
             colorFill: ATheme.BACKGROUND_COLOR,
             colorBorder: ATheme.TEXT_COLOR,

@@ -1,6 +1,9 @@
 import 'package:albokemon_app/shared/network/events.dart';
+import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
+import 'package:albokemon_app/shared/utils/nav.dart';
+import 'package:albokemon_app/shared/utils/theme.dart';
 import 'package:flutter/material.dart';
 
 class LobbyViewModel extends ChangeNotifier {
@@ -75,6 +78,19 @@ class LobbyViewModel extends ChangeNotifier {
       error = payload is Map
           ? (payload["msg"]?.toString() ?? payload.toString())
           : payload.toString();
+      Logger.instance.error("ERROR ::", payload);
+
+      if (payload['code'] == "IN_MATCH") {
+        sentInvites = [];
+        ScaffoldMessenger.of(Nav.routeObserver.navigator!.context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'User is in match!',
+              style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+            ),
+          ),
+        );
+      }
       notifyListeners();
     };
 
@@ -169,6 +185,8 @@ class LobbyViewModel extends ChangeNotifier {
     if (_onMatchStart != null) s.off(SocketEvents.matchStart, _onMatchStart!);
     if (_onMatchDeclined != null)
       s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
+    if (_onErr != null) s.off(SocketEvents.err, _onErr!);
+    Audio.instance.stop();
     super.dispose();
   }
 }

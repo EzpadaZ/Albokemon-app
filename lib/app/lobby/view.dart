@@ -1,3 +1,4 @@
+import 'package:albokemon_app/app/battle/view.dart';
 import 'package:albokemon_app/app/lobby/model.dart';
 import 'package:albokemon_app/app/login/view.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
@@ -49,7 +50,9 @@ class _LobbyViewState extends State<LobbyView> {
 
   @override
   void initState() {
-    _model = new LobbyViewModel();
+    super.initState();
+    _model = LobbyViewModel();
+
     _model.addListener(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -61,12 +64,18 @@ class _LobbyViewState extends State<LobbyView> {
         } else if (!hasInvite && _isInviteModalDisplayed) {
           _closeInviteModal();
         }
+
+        if (_model.matchStart.isNotEmpty) {
+          final ms = _model.matchStart;
+          _model.matchStart = {};
+          Nav.navigateToWidget(view: BattleView(matchStart: ms));
+        }
       });
 
       if (mounted) setState(() {});
     });
+
     _model.refresh();
-    super.initState();
   }
 
   @override
@@ -129,7 +138,7 @@ class _LobbyViewState extends State<LobbyView> {
             width: 128,
             height: 42,
             onTap: () {
-              // _model.acceptInvite();
+              _model.acceptInvite();
             },
             colorFill: ATheme.BACKGROUND_COLOR,
             colorBorder: ATheme.TEXT_COLOR,
