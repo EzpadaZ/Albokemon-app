@@ -1,3 +1,4 @@
+import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:just_audio/just_audio.dart';
 
 class Audio {
@@ -7,14 +8,18 @@ class Audio {
   final _player = AudioPlayer();
   bool _ready = false;
 
-  Future<void> playLoop(String assetPath, {double volume = 0.7}) async {
+  Future<void> playLoop(String assetPath) async {
     if (!_ready) {
       await _player.setLoopMode(LoopMode.one);
       _ready = true;
     }
     await _player.setAsset(assetPath);
-    _player.setVolume(volume);
+    _player.setVolume(GameManager.instance.music_volume);
     await _player.play();
+  }
+
+  updateVolume(){
+    _player.setVolume(GameManager.instance.music_volume);
   }
 
   Future<void> stop() => _player.stop();

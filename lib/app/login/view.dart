@@ -1,8 +1,12 @@
+import 'dart:ui';
+
 import 'package:albokemon_app/shared/utils/audio.dart';
+import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/theme.dart';
 import 'package:albokemon_app/shared/widgets/button.dart';
 import 'package:albokemon_app/shared/widgets/text_field.dart';
+import 'package:albokemon_app/shared/widgets/text_pulse.dart';
 import 'package:albokemon_app/shared/widgets/thirdparty/pixel_border.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -18,12 +22,21 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   late LoginViewModel _model;
+  bool showTextfield = false;
+  bool showSettings = false;
+
+  String editedConnection = "";
+  String username = "";
 
   @override
   void initState() {
     // TODO: implement initState
-    _model = new LoginViewModel();
+    _model = LoginViewModel();
+    Audio.instance.playLoop('assets/bgm/menu.mp3');
+    editedConnection = GameManager.instance.connectionString;
+    username = _model.username;
 
+    Logger.instance.info("Conn:: $editedConnection");
     _model.addListener(() {
       setState(() {}); // allows the model to update the view.
     });
@@ -33,8 +46,32 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ATheme.BACKGROUND_COLOR,
-      body: SafeArea(child: _model.isLoading ? loading() : body()),
+      body: SafeArea(
+        child: _model.isLoading
+            ? loading()
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      'assets/image/main_bg.jpg',
+                      fit: BoxFit.cover, // usually better than fill
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 216,
+                    left: MediaQuery.of(context).size.width * 0.5,
+                    child: Image.asset(
+                      'assets/image/snorlax_sleeping.gif',
+                      width: 128,
+                      height: 128,
+                    ),
+                  ),
+                  body(),
+                ],
+              ),
+      ),
     );
   }
 
@@ -67,60 +104,252 @@ class _LoginViewState extends State<LoginView> {
         children: [
           const SizedBox(height: 64),
           SizedBox(height: 76, child: Image.asset('assets/image/logo.png')),
-          const SizedBox(height: 16),
-          Text(
-            'Bienvenido a Albokémon\nProyecto para la prueba tecnica de \nSr. Software Engineer de Albo',
-            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          WidgetTextField(
-            value: _model.username,
-            hintText: "Introduce tu nombre de jugador",
-            maxLength: 8,
-            onChange: (v) {
-              setState(() {
-                _model.username = v;
-              });
-            },
-          ),
           const SizedBox(height: 8),
-          _model.error != null
-              ? _model.error!.isNotEmpty
-                    ? Text(
-                        _model.error ?? "Error Generico",
-                        style: ATheme.textStyle(
-                          size: FONT_SIZE.SMALL,
-                          color: ATheme.DAMAGE_COLOR,
-                        ),
-                      )
-                    : Container()
-              : Container(),
-          const Spacer(),
-          WidgetButton(
-            label: 'Jugar',
-            height: 48,
-            onTap: () async {
-              Logger.instance.info("Content: ${_model.username}");
-              await _model.execute();
-            },
-            colorFill: ATheme.BACKGROUND_COLOR,
-            colorBorder: ATheme.TEXT_COLOR,
-            colorText: ATheme.TEXT_COLOR,
+          Text(
+            'Made by J.Espadas (2026)',
+            textAlign: TextAlign.center,
+            style: ATheme.textStyle(
+              size: FONT_SIZE.SMALL,
+              family: FONT_FAMILY.FIPPS,
+            ),
           ),
-          const SizedBox(height: 8,),
-          WidgetButton(
-            label: 'Ajustes',
-            height: 48,
-            onTap: () async {
-              // Nothing
-            },
-            colorFill: ATheme.BACKGROUND_COLOR,
-            colorBorder: ATheme.TEXT_COLOR,
-            colorText: ATheme.TEXT_COLOR,
+          const SizedBox(height: 64),
+          animatedTextfield(),
+          const SizedBox(height: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 200, // pick a value that fits your longest label
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (showTextfield && _model.username.isNotEmpty) {
+                        await _model.execute();
+                      } else {
+                        setState(() {
+                          showTextfield = !showTextfield;
+
+                          if (showSettings) {
+                            showSettings = false;
+                          }
+                        });
+                      }
+                    },
+                    child: SmoothColorText(
+                      '> JUGAR',
+                      colorA: ATheme.LIGHT_DARK_GREEN,
+                      colorB: ATheme.DARK_GREEN,
+                      glass: false,
+                      style: ATheme.textStyle(
+                        size: FONT_SIZE.H2,
+                        style: FONT_STYLE.BOLD,
+                        family: FONT_FAMILY.FIPPS,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: 200,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        showSettings = !showSettings;
+                      });
+                    },
+                    child: SmoothColorText(
+                      '> AJUSTES',
+                      colorA: ATheme.LIGHT_DARK_GREEN,
+                      colorB: ATheme.DARK_GREEN,
+                      glass: false,
+                      style: ATheme.textStyle(
+                        size: FONT_SIZE.H2,
+                        style: FONT_STYLE.BOLD,
+                        family: FONT_FAMILY.FIPPS,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            'Bienvenido a Albokémon\nProyecto para la prueba tecnica de \nSr. Software Engineer de Albo\n\n 2026 Flutter + Sockets.IO',
+            style: ATheme.textStyle(size: FONT_SIZE.H4, style: FONT_STYLE.BOLD),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
+    );
+  }
+
+  Widget animatedTextfield() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, anim) => SizeTransition(
+        sizeFactor: anim,
+        axisAlignment: -1, // expand from top
+        child: FadeTransition(opacity: anim, child: child),
+      ),
+      child: showSettings
+          ? settingsBox()
+          : showTextfield
+          ? textfield()
+          : const SizedBox(key: ValueKey('empty')),
+    );
+  }
+
+  Widget settingsBox() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0x10000000), // semi-transparent
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withOpacity(0.18), width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'AJUSTES',
+                style: ATheme.textStyle(
+                  size: FONT_SIZE.H4,
+                  style: FONT_STYLE.BOLD,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Volumen',
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          if (GameManager.instance.music_volume > 0.0) {
+                            setState(() {
+                              GameManager.instance.music_volume -= 0.05;
+                              Audio.instance.updateVolume();
+                            });
+                          }
+                        },
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              '-',
+                              style: ATheme.textStyle(
+                                size: FONT_SIZE.PARAGRAPH,
+                                style: FONT_STYLE.BOLD,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        (GameManager.instance.music_volume * 100)
+                            .toStringAsFixed(1),
+                        style: ATheme.textStyle(
+                          size: FONT_SIZE.PARAGRAPH,
+                          style: FONT_STYLE.BOLD,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: () {
+                          if (GameManager.instance.music_volume > 0.0) {
+                            setState(() {
+                              GameManager.instance.music_volume += 0.05;
+                              Audio.instance.updateVolume();
+                            });
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            '+',
+                            style: ATheme.textStyle(
+                              size: FONT_SIZE.PARAGRAPH,
+                              style: FONT_STYLE.BOLD,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Server Address',
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                  WidgetTextField(
+                    value: editedConnection,
+                    initialValue: editedConnection,
+                    hintText: "http://localhost:3001",
+                    onChange: (p) {
+                      GameManager.instance.connectionString = p;
+                      editedConnection = p;
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget textfield() {
+    return Column(
+      children: [
+        WidgetTextField(
+          value: _model.username.isNotEmpty ? _model.username : username,
+          hintText: "Introduce tu nombre de jugador",
+          maxLength: 8,
+          initialValue: username,
+          onChange: (v) {
+            setState(() {
+              _model.username = v;
+              username = v;
+            });
+          },
+        ),
+        const SizedBox(height: 8),
+        _model.error != null
+            ? _model.error!.isNotEmpty
+                  ? Text(
+                      _model.error ?? "Error Generico",
+                      style: ATheme.textStyle(
+                        size: FONT_SIZE.SMALL,
+                        color: ATheme.DAMAGE_COLOR,
+                      ),
+                    )
+                  : Container()
+            : Container(),
+      ],
     );
   }
 }

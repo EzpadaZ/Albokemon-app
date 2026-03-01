@@ -8,6 +8,7 @@ class WidgetTextField extends StatefulWidget {
   String value;
   int? maxLength;
   String? hintText;
+  String? initialValue;
 
   WidgetTextField({
     required this.value,
@@ -15,6 +16,7 @@ class WidgetTextField extends StatefulWidget {
     this.onTap,
     this.maxLength,
     this.hintText,
+    this.initialValue,
     super.key,
   });
 
@@ -27,6 +29,7 @@ class _WidgetTextFieldState extends State<WidgetTextField> {
   Widget build(BuildContext context) {
     return Container(
       decoration: ShapeDecoration(
+        color: ATheme.BACKGROUND_COLOR,
         shape: PixelBorder.solid(
           borderRadius: BorderRadius.circular(2.0),
           pixelSize: 0.5,
@@ -39,6 +42,7 @@ class _WidgetTextFieldState extends State<WidgetTextField> {
         cursorColor: ATheme.TEXT_COLOR,
         style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
         keyboardType: TextInputType.text,
+        initialValue: widget.initialValue,
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.all(8),
           enabledBorder: InputBorder.none,

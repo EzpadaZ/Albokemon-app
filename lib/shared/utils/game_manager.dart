@@ -13,9 +13,12 @@ class GameManager {
 
   bool _init = false;
 
+  double music_volume = 0.2;
+  String connectionString = "http://192.168.3.201:3001";
+
   void init() {
     if (_init) return;
-    socket = SocketClient("http://192.168.3.201:3001");
+    socket = SocketClient(connectionString);
     session = Session(socket);
     _init = true;
   }

@@ -1,30 +1,12 @@
 import 'package:flutter/material.dart';
 
-enum FONT_SIZE {
-  H0,
-  H1,
-  H2,
-  H3,
-  H4,
-  PARAGRAPH,
-  SMALL,
-  TINY,
-}
+enum FONT_SIZE { H0, H1, H2, H3, H4, PARAGRAPH, SMALL, TINY }
 
-enum FONT_STYLE {
-  REGULAR,
-  BOLD,
-  SEMIBOLD
-}
+enum FONT_STYLE { REGULAR, BOLD, SEMIBOLD }
 
-enum FONT_DECORATION {
-  UNDERLINE,
-  LINE_THROUGH,
-  OVERLINE,
-  NONE,
-}
+enum FONT_DECORATION { UNDERLINE, LINE_THROUGH, OVERLINE, NONE }
 
-enum FONT_FAMILY { MONOCRAFT }
+enum FONT_FAMILY { MONOCRAFT, FIPPS }
 
 class ATheme {
   static const Color BACKGROUND_COLOR = Color(0xFFF7F4E9);
@@ -34,6 +16,8 @@ class ATheme {
   static const Color TEXT_HINT = Color(0xFF7F8081);
   static const Color DAMAGE_COLOR = Color(0xFFD64B3C);
   static const Color WARNING_COLOR = Color(0xFFE0B12D);
+  static const Color DARK_GREEN = Color(0xFF518251);
+  static const Color LIGHT_DARK_GREEN = Color(0xFF385130);
 
   static const double _FONT_SIZE_H0 = 32.0;
   static const double _FONT_SIZE_H1 = 32.0;
@@ -112,6 +96,8 @@ class ATheme {
     switch (family) {
       case FONT_FAMILY.MONOCRAFT:
         fontFamily = "Monocraft";
+      case FONT_FAMILY.FIPPS:
+        fontFamily = "Fipps";
         break;
     }
 

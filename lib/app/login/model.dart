@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:albokemon_app/app/lobby/view.dart';
-import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/nav.dart';
@@ -38,7 +37,6 @@ class LoginViewModel extends ChangeNotifier {
       await connect();
       isConnected = true;
       notifyListeners();
-      Audio.instance.playLoop('assets/bgm/menu.mp3', volume: 0.5);
       await Future.delayed(const Duration(seconds: 2));
       await login(trimmed);
       Nav.navigateToWidget(view: const LobbyView());

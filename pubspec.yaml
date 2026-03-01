@@ -30,8 +30,13 @@ flutter:
    - assets/bgm/battle.mp3
    - assets/image/trainer_front.png
    - assets/image/trainer_back.png
+   - assets/image/main_bg.jpg
+   - assets/image/snorlax_sleeping.gif
 
   fonts:
    - family: Monocraft
      fonts:
        - asset: assets/fonts/Monocraft.ttf
+   - family: Fipps
+     fonts:
+       - asset: assets/fonts/Fipps-Regular.otf
