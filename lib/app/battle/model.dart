@@ -1,4 +1,6 @@
+import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../../shared/network/events.dart';
 import '../../shared/utils/game_manager.dart';
 
@@ -88,6 +90,8 @@ class BattleViewModel extends ChangeNotifier {
 
   void attack() {
     if (!myTurn) return;
+    HapticFeedback.mediumImpact();
+    Audio.instance.playSfx('assets/sfx/button_click.wav');
     GameManager.instance.socket.emit(SocketEvents.battleAttack, {
       "matchId": matchId,
     });

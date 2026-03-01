@@ -12,6 +12,7 @@ import 'package:albokemon_app/shared/widgets/button.dart';
 import 'package:albokemon_app/shared/widgets/modal.dart';
 import 'package:albokemon_app/shared/widgets/thirdparty/pixel_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LobbyView extends StatefulWidget {
@@ -110,6 +111,8 @@ class _LobbyViewState extends State<LobbyView> {
               padding: const EdgeInsets.all(8.0),
               child: GestureDetector(
                 onTap: () {
+                  HapticFeedback.mediumImpact();
+                  Audio.instance.playSfx('assets/sfx/button_click.wav');
                   Logger.instance.info(
                     "Disconnect Action: ${GameManager.instance.assignedId}",
                   );
@@ -173,6 +176,8 @@ class _LobbyViewState extends State<LobbyView> {
             width: 128,
             height: 42,
             onTap: () {
+              HapticFeedback.mediumImpact();
+              Audio.instance.playSfx('assets/sfx/button_click.wav');
               _model.acceptInvite();
             },
             colorFill: ATheme.BACKGROUND_COLOR,
@@ -185,6 +190,8 @@ class _LobbyViewState extends State<LobbyView> {
             width: 128,
             height: 42,
             onTap: () {
+              HapticFeedback.mediumImpact();
+              Audio.instance.playSfx('assets/sfx/button_click.wav');
               _model.declineInvite();
             },
             colorFill: ATheme.BACKGROUND_COLOR,
@@ -281,6 +288,8 @@ class _LobbyViewState extends State<LobbyView> {
                     width: 128,
                     height: 42,
                     onTap: () {
+                      HapticFeedback.mediumImpact();
+                      Audio.instance.playSfx('assets/sfx/button_click.wav');
                       setState(() {
                         _model.requestMatch(info['id']);
                       });

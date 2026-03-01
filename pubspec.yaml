@@ -34,6 +34,8 @@ flutter:
    - assets/image/snorlax_sleeping.gif
    - assets/image/battle_bg.jpg
    - assets/image/lobby_bg.jpg
+   - assets/image/heart.png
+   - assets/image/pokeball.png
    - assets/sfx/button_click.wav
    - assets/sfx/self_hurt.wav
    - assets/sfx/attack_opponent.wav

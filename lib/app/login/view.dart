@@ -127,6 +127,7 @@ class _LoginViewState extends State<LoginView> {
                   child: GestureDetector(
                     onTap: () async {
                       HapticFeedback.mediumImpact();
+                      Audio.instance.playSfx('assets/sfx/button_click.wav');
                       if (showTextfield && _model.username.isNotEmpty) {
                         await _model.execute();
                       } else {

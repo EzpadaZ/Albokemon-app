@@ -25,8 +25,15 @@ class _BattleViewState extends State<BattleView> {
 
   bool _flashMy = false;
   bool _flashOpp = false;
-  int _lastEventsLen = 0;
   int _lastTurnProcessed = -1;
+
+  String? _dmgMyText;
+  String? _dmgOppText;
+  bool _showMyDmg = false;
+  bool _showOppDmg = false;
+
+  Timer? _myDmgTimer;
+  Timer? _oppDmgTimer;
 
   @override
   void initState() {
@@ -35,6 +42,30 @@ class _BattleViewState extends State<BattleView> {
     Audio.instance.playLoop('assets/bgm/battle.mp3');
     _model = BattleViewModel(matchStart: widget.matchStart);
     _model.addListener(_onModel);
+  }
+
+  void _showDmgMy(int dmg) {
+    _myDmgTimer?.cancel();
+    setState(() {
+      _dmgMyText = "-$dmg HP";
+      _showMyDmg = true;
+    });
+    _myDmgTimer = Timer(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() => _showMyDmg = false);
+    });
+  }
+
+  void _showDmgOpp(int dmg) {
+    _oppDmgTimer?.cancel();
+    setState(() {
+      _dmgOppText = "-$dmg HP";
+      _showOppDmg = true;
+    });
+    _oppDmgTimer = Timer(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() => _showOppDmg = false);
+    });
   }
 
   void _onModel() {
@@ -49,8 +80,18 @@ class _BattleViewState extends State<BattleView> {
       for (final e in _model.events) {
         if (e['type'] == 'hit') {
           final to = e['to']?.toString();
-          if (to == _model.myId) _pulseMy();
-          if (to == _model.opponentId) _pulseOpp();
+          final dmg = int.tryParse(e['damage']?.toString() ?? '') ?? 0;
+
+          if (to == _model.myId) {
+            _pulseMy();
+            _showDmgMy(dmg);
+            Audio.instance.playSfx('assets/sfx/self_hurt.wav');
+          }
+          if (to == _model.opponentId) {
+            _pulseOpp();
+            _showDmgOpp(dmg);
+            Audio.instance.playSfx('assets/sfx/attack_opponent.wav');
+          }
         }
       }
     }
@@ -76,6 +117,8 @@ class _BattleViewState extends State<BattleView> {
 
   @override
   void dispose() {
+    _myDmgTimer?.cancel();
+    _oppDmgTimer?.cancel();
     _model.removeListener(_onModel);
     _model.dispose();
     super.dispose();
@@ -112,36 +155,50 @@ class _BattleViewState extends State<BattleView> {
   Widget resultBox() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.18), // glass
-          border: Border.all(color: Colors.black.withOpacity(0.28)),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Column(
-          children: [
-            Text(
-              'YOU ${_model.iWon ? "WIN" : "LOST"}!',
-              style: ATheme.textStyle(
-                size: FONT_SIZE.H2,
-                style: FONT_STYLE.BOLD,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          decoration: BoxDecoration(
+            // tinted frosted glass
+            color: Colors.white.withOpacity(0.18),
+            // tint (change if you want)
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                spreadRadius: 2,
+                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.22),
               ),
-            ),
-            const SizedBox(height: 24),
-            WidgetButton(
-              label: "BACK TO LOBBY",
-              height: 42,
-              isEnabled: true,
-              onTap: () {
-                Audio.instance.stop();
-                Nav.navigateAndReplaceAll(view: const LobbyView());
-              },
-              colorFill: Colors.white,
-              colorBorder: ATheme.TEXT_COLOR,
-              colorText: ATheme.TEXT_COLOR,
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'YOU ${_model.iWon ? "WIN" : "LOST"}!',
+                style: ATheme.textStyle(
+                  size: FONT_SIZE.H2,
+                  style: FONT_STYLE.BOLD,
+                ),
+              ),
+              const SizedBox(height: 24),
+              WidgetButton(
+                label: "BACK TO LOBBY",
+                height: 42,
+                isEnabled: true,
+                onTap: () {
+                  Audio.instance.stop();
+                  Nav.navigateAndReplaceAll(view: const LobbyView());
+                },
+                colorFill: Colors.white,
+                colorBorder: ATheme.TEXT_COLOR,
+                colorText: ATheme.TEXT_COLOR,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -172,14 +229,37 @@ class _BattleViewState extends State<BattleView> {
                     style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'POKEMON HP: ${_model.myHp}',
-                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  Row(
+                    children: [
+                      Text(
+                        'POKEMON HP: ${_model.myHp}',
+                        style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                      ),
+                      Image.asset(
+                        'assets/image/heart.png',
+                        width: 16,
+                        height: 16,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'POKEMON LEFT: ${_model.myLivesLeft}',
-                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        'POKEMON LEFT: ',
+                        style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                      ),
+                      ...List.generate(
+                        _model.myLivesLeft,
+                        (_) => Image.asset(
+                          'assets/image/pokeball.png',
+                          width: 22,
+                          height: 22,
+                          filterQuality: FilterQuality.none, // crisp pixel
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -230,7 +310,7 @@ class _BattleViewState extends State<BattleView> {
               children: [
                 Positioned(
                   left: (128 - 70) / 2, // center it (tweak)
-                  top: 96, // push below (tweak)
+                  top: 90, // push below (tweak)
                   child: Opacity(
                     opacity: 0.35,
                     child: Container(
@@ -251,6 +331,13 @@ class _BattleViewState extends State<BattleView> {
                   width: 128,
                   height: 128,
                 ),
+
+                if (_showMyDmg && _dmgMyText != null)
+                  Positioned(
+                    right: 20,
+                    top: -10,
+                    child: _damageTextAnimated(_dmgMyText!),
+                  ),
               ],
             ),
           ),
@@ -261,32 +348,86 @@ class _BattleViewState extends State<BattleView> {
   Widget enemyDisplay() {
     final oppGif = _model.oppGifUrl;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       // helps keep bottoms aligned
       children: [
         Transform.translate(
           offset: const Offset(30, -20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'TRAINER: ${_model.opponentName}',
-                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 12),
+                  color: Colors.black.withOpacity(0.30), // floating shadow
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    border: Border.all(color: Colors.white.withOpacity(0.22)),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'TRAINER: ${_model.opponentName}',
+                        style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                      ),
+                      Text(
+                        'POKEMON:  ${(_model.oppActive['name'] ?? '-').toString().toUpperCase()}',
+                        style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'POKEMON HP: ${_model.oppHp}',
+                            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                          ),
+                          Image.asset(
+                            'assets/image/heart.png',
+                            width: 16,
+                            height: 16,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            'POKEMON LEFT: ',
+                            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                          ),
+                          ...List.generate(
+                            _model.oppLivesLeft,
+                            (_) => Image.asset(
+                              'assets/image/pokeball.png',
+                              width: 22,
+                              height: 22,
+                              filterQuality: FilterQuality.none, // crisp pixel
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              Text(
-                'POKEMON:  ${(_model.oppActive['name'] ?? '-').toString().toUpperCase()}',
-                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-              ),
-              Text(
-                'POKEMON HP: ${_model.oppHp}',
-                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-              ),
-              Text(
-                'POKEMON LEFT: ${_model.oppLivesLeft}',
-                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-              ),
-            ],
+            ),
           ),
         ),
         const Spacer(),
@@ -311,16 +452,55 @@ class _BattleViewState extends State<BattleView> {
                   ),
                 ),
               ),
-
               _gifSprite(url: oppGif, flash: _flashOpp, width: 64, height: 64),
+              if (_showOppDmg && _dmgOppText != null)
+                Positioned(
+                  left: -10,
+                  top: -20,
+                  child: _damageTextAnimated(_dmgOppText!),
+                ),
             ],
           ),
 
         Transform.translate(
           offset: const Offset(0, -40),
-          child: Image.asset('assets/image/trainer_front.png', scale: 0.8),
+          child: Image.asset(
+            'assets/image/trainer_front.png',
+            scale: 0.8,
+            filterQuality: FilterQuality.none,
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _damageTextAnimated(String text) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 650),
+      builder: (context, t, child) {
+        // t: 0 -> 1
+        final dy = lerpDouble(0, -18, t)!; // move up
+        final opacity = (1.0 - (t * 0.6)).clamp(0, 1); // fade a bit
+
+        return Opacity(
+          opacity: opacity * 1.0,
+          child: Transform.translate(offset: Offset(0, dy), child: child),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          text,
+          style: ATheme.textStyle(
+            size: FONT_SIZE.PARAGRAPH,
+          ).copyWith(color: ATheme.DAMAGE_COLOR, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 
@@ -337,6 +517,7 @@ class _BattleViewState extends State<BattleView> {
       width: width,
       height: height,
       fit: BoxFit.contain,
+      filterQuality: FilterQuality.none,
     );
 
     if (flipX) {

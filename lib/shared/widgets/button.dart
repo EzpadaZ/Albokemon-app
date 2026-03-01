@@ -1,10 +1,10 @@
 import 'package:albokemon_app/shared/utils/theme.dart';
-import 'package:albokemon_app/shared/widgets/thirdparty/pixel_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class WidgetButton extends StatelessWidget {
+class WidgetButton extends StatefulWidget {
   final String label;
-  final Function() onTap;
+  final VoidCallback onTap;
 
   final Color colorFill;
   final Color colorBorder;
@@ -17,15 +17,17 @@ class WidgetButton extends StatelessWidget {
   final bool isEnabled;
   final double? width;
   final double? height;
-  final double borderWidth = 1.0;
-
+  final double borderWidth;
   final EdgeInsetsGeometry? padding;
 
   final double borderRadius;
-  final double elevation = 0.0;
 
   final TextStyle? textStyle;
   final TextStyle? textStyleDisabled;
+
+  // new
+  final double lift; // how "raised" it is
+  final Color shadowColor;
 
   const WidgetButton({
     super.key,
@@ -44,60 +46,104 @@ class WidgetButton extends StatelessWidget {
     this.textStyle,
     this.textStyleDisabled,
     this.borderRadius = 4.0,
+    this.borderWidth = 1.0,
+    this.lift = 4.0,
+    this.shadowColor = const Color(0xAA000000),
   });
 
-  TextStyle getTextStyle() {
-    if (textStyle != null) {
-      return textStyle!;
-    }
+  @override
+  State<WidgetButton> createState() => _WidgetButtonState();
+}
 
+class _WidgetButtonState extends State<WidgetButton> {
+  bool _pressed = false;
+
+  TextStyle _getTextStyle() {
+    if (widget.textStyle != null) return widget.textStyle!;
     return ATheme.textStyle(
       size: FONT_SIZE.H4,
       style: FONT_STYLE.BOLD,
-      color: colorText,
+      color: widget.colorText,
     );
   }
 
-  TextStyle getTextStyleDisabled() {
-    if (textStyleDisabled != null) {
-      return textStyleDisabled!;
-    }
-
+  TextStyle _getTextStyleDisabled() {
+    if (widget.textStyleDisabled != null) return widget.textStyleDisabled!;
     return ATheme.textStyle(
       size: FONT_SIZE.H4,
       style: FONT_STYLE.BOLD,
-      color: colorDisabledText,
+      color: widget.colorDisabledText,
     );
+  }
+
+  void _setPressed(bool v) {
+    if (!widget.isEnabled) return;
+    if (_pressed == v) return;
+    setState(() => _pressed = v);
   }
 
   @override
   Widget build(BuildContext context) {
+    final enabled = widget.isEnabled;
+
+    final fill = enabled ? widget.colorFill : widget.colorDisabledFill;
+    final border = enabled ? widget.colorBorder : widget.colorDisabledBorder;
+    final textStyle = enabled ? _getTextStyle() : _getTextStyleDisabled();
+
+    final lift = enabled ? widget.lift : 0.0;
+    final y = _pressed ? lift : 0.0; // move down when pressed -> flat
+
     return GestureDetector(
-      onTap: (isEnabled) ? onTap : null,
-      child: Container(
-        height: height,
-        width: width,
-        padding: padding,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(
-            Radius.circular(
-              borderRadius,
-            ),
-          ),
-          border: Border.all(
-            color: isEnabled ? colorBorder : colorDisabledBorder,
-            width: borderWidth,
-          ),
-          color: isEnabled ? colorFill : colorDisabledFill,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _setPressed(true),
+      onTapCancel: () => _setPressed(false),
+      onTapUp: (_) => _setPressed(false),
+      onTap: enabled
+          ? () {
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      }
+          : null,
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height != null ? widget.height! + lift : null,
+        child: Stack(
           children: [
-            Flexible(
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: isEnabled ? getTextStyle() : getTextStyleDisabled(),
+            // shadow "base"
+            Positioned(
+              left: 0,
+              right: 0,
+              top: lift,
+              child: Container(
+                height: widget.height,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(widget.borderRadius),
+                  color: widget.shadowColor,
+                ),
+              ),
+            ),
+
+            // face (moves down on press)
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 70),
+              curve: Curves.linear,
+              left: 0,
+              right: 0,
+              top: y,
+              child: Container(
+                height: widget.height,
+                padding: widget.padding,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(widget.borderRadius),
+                  border: Border.all(color: border, width: widget.borderWidth),
+                  color: fill,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  style: textStyle,
+                ),
               ),
             ),
           ],
