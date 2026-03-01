@@ -22,6 +22,10 @@ class Audio {
     _player.setVolume(GameManager.instance.music_volume);
   }
 
+  isPLaying() {
+    return _player.playing;
+  }
+
   Future<void> stop() => _player.stop();
   Future<void> dispose() => _player.dispose();
 }

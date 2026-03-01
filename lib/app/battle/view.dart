@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:albokemon_app/shared/utils/audio.dart';
+import 'package:albokemon_app/shared/utils/nav.dart';
 import 'package:albokemon_app/shared/utils/theme.dart';
 import 'package:albokemon_app/shared/widgets/button.dart';
 import 'package:albokemon_app/shared/widgets/sprite.dart';
 import 'package:flutter/material.dart';
 import '../../shared/network/events.dart';
 import '../../shared/utils/game_manager.dart';
+import '../lobby/view.dart';
 import 'model.dart';
 
 class BattleView extends StatefulWidget {
@@ -79,82 +81,113 @@ class _BattleViewState extends State<BattleView> {
 
   @override
   Widget build(BuildContext context) {
-    final myGif = _model.myGifUrl;
-    final oppGif = _model.oppGifUrl;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Opponent (top-right-ish)
-            if (oppGif != null)
-              _gifSprite(
-                url: oppGif,
-                greyedOut: !_model.myTurn,
-                // optional
-                flash: _flashOpp,
-                left: MediaQuery.of(context).size.width * 0.75,
-                top: MediaQuery.of(context).size.height * 0.12,
-              ),
+            const SizedBox(height: 64),
+            // Enemy Display
+            enemyDisplay(),
+            const Spacer(),
+            // My Display
+            myDisplay(),
+            _model.isFinished ? resultBox() : actionBox(),
+          ],
+        ),
+      ),
+    );
+  }
 
-            Positioned(
-              left: MediaQuery.of(context).size.width * 0.6,
-              top: MediaQuery.of(context).size.height * 0.07,
-              child: Image.asset('assets/image/trainer_front.png'),
-            ),
-
-            // Player (bottom-left-ish)
-            if (myGif != null)
-              _gifSprite(
-                url: myGif,
-                greyedOut: !_model.myTurn,
-                flipX: true,
-                // grey your pokemon when it's NOT your turn
-                flash: _flashMy,
-                left: MediaQuery.of(context).size.width * 0.30,
-                top: MediaQuery.of(context).size.height * 0.50,
-              ),
-
-            Positioned(
-              left: MediaQuery.of(context).size.width * 0.01,
-              top: MediaQuery.of(context).size.height * 0.49,
-              child: spriteSheetFrameV(image: AssetImage('assets/image/trainer_back.png'),frames: 4, frameWidth: 128, frameHeight: 128 , index: 3),
-            ),
-            // HUD
-            Positioned(
-              left: 16,
-              bottom: 168,
-              child: Text(
-                "HP: ${_model.myHp}",
-                style: ATheme.textStyle(size: FONT_SIZE.H2),
+  Widget resultBox() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.18), // glass
+          border: Border.all(color: Colors.black.withOpacity(0.28)),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          children: [
+            Text(
+              'YOU ${_model.iWon ? "WIN" : "LOST"}!',
+              style: ATheme.textStyle(
+                size: FONT_SIZE.H2,
+                style: FONT_STYLE.BOLD,
               ),
             ),
-            Positioned(
-              right: 16,
-              top: 12,
-              child: Text(
-                "ENEMY HP: ${_model.oppHp}",
-                style: ATheme.textStyle(size: FONT_SIZE.H2),
-              ),
+            const SizedBox(height: 24),
+            WidgetButton(
+              label: "BACK TO LOBBY",
+              height: 42,
+              isEnabled: true,
+              onTap: () {
+                Audio.instance.stop();
+                Nav.navigateAndReplaceAll(view: const LobbyView());
+              },
+              colorFill: Colors.white,
+              colorBorder: ATheme.TEXT_COLOR,
+              colorText: ATheme.TEXT_COLOR,
             ),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // ATTACK button
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
+  Widget actionBox() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.18), // glass
+          border: Border.all(color: Colors.black.withOpacity(0.28)),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'POKEMON: ${_model.myActive['name'] ?? '-'}',
+                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'POKEMON HP: ${_model.myHp}',
+                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'POKEMON LEFT: ${_model.myLivesLeft}',
+                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'CURRENT TURN: ${_model.myTurn ? "YOU" : "OPPONENT"}',
+                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Flexible(
               child: WidgetButton(
-                label: _model.myTurn ? 'ATTACK' : 'WAIT',
-                isEnabled: _model.myTurn,
+                label: _model.myTurn ? 'ATTACK' : "WAITING",
+                height: 64,
                 width: 128,
-                height: 42,
+                isEnabled: _model.myTurn,
                 onTap: () {
-                  if (_model.myTurn) {
-                    _model.attack();
-                  }
+                  _model.attack();
                 },
-                colorFill: ATheme.BACKGROUND_COLOR,
+                colorFill: Colors.white,
                 colorBorder: ATheme.TEXT_COLOR,
                 colorText: ATheme.TEXT_COLOR,
               ),
@@ -165,15 +198,93 @@ class _BattleViewState extends State<BattleView> {
     );
   }
 
+  Widget myDisplay() {
+    final myGif = _model.myGifUrl;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        spriteSheetFrameV(
+          image: AssetImage('assets/image/trainer_back.png'),
+          frames: 4,
+          frameWidth: 128,
+          frameHeight: 128,
+          index: 3,
+        ),
+
+        // Player (bottom-left-ish)
+        if (myGif != null)
+          Transform.translate(
+            offset: const Offset(-20, -30),
+            child: _gifSprite(
+              url: myGif,
+              greyedOut: !_model.myTurn,
+              flipX: true,
+              flash: _flashMy,
+              width: 128,
+              height: 128,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget enemyDisplay() {
+    final oppGif = _model.oppGifUrl;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      // helps keep bottoms aligned
+      children: [
+        Transform.translate(
+          offset: const Offset(30, -20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TRAINER: ${_model.opponentName}',
+                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+              ),
+              Text(
+                'POKEMON:  ${_model.oppActive['name'] ?? '-'}',
+                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+              ),
+              Text(
+                'POKEMON HP: ${_model.oppHp}',
+                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+              ),
+              Text(
+                'POKEMON LEFT: ${_model.oppLivesLeft}',
+                style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+              ),
+            ],
+          ),
+        ),
+        const Spacer(),
+        if (oppGif != null)
+          _gifSprite(url: oppGif, greyedOut: !_model.myTurn, flash: _flashOpp),
+        Transform.translate(
+          offset: const Offset(0, -40), // move up (tweak this)
+          child: Image.asset('assets/image/trainer_front.png', scale: 0.8),
+        ),
+      ],
+    );
+  }
+
   Widget _gifSprite({
     required String url,
     required bool greyedOut,
     required bool flash,
-    required double left,
-    required double top,
+    double width = 80,
+    double height = 80,
     bool flipX = false,
   }) {
-    Widget img = Image.network(url, width: 64, height: 64, fit: BoxFit.contain);
+    Widget img = Image.network(
+      url,
+      width: width,
+      height: height,
+      fit: BoxFit.contain,
+    );
 
     if (flipX) {
       img = Transform(
@@ -187,24 +298,23 @@ class _BattleViewState extends State<BattleView> {
       img = Opacity(
         opacity: 0.65,
         child: ColorFiltered(
-          colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.saturation),
+          colorFilter: const ColorFilter.mode(
+            Colors.grey,
+            BlendMode.saturation,
+          ),
           child: img,
         ),
       );
     }
 
-    return Positioned(
-      left: left,
-      top: top,
-      child: Stack(
-        children: [
-          img,
-          if (flash)
-            Positioned.fill(
-              child: Container(color: Colors.white.withOpacity(0.65)),
-            ),
-        ],
-      ),
+    return Stack(
+      children: [
+        img,
+        if (flash)
+          Positioned.fill(
+            child: Container(color: Colors.white.withOpacity(0.65)),
+          ),
+      ],
     );
   }
 }

@@ -15,9 +15,9 @@ class BattleViewModel extends ChangeNotifier {
 
       events = (payload['events'] is List)
           ? (payload['events'] as List)
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList()
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList()
           : [];
 
       notifyListeners();
@@ -38,12 +38,16 @@ class BattleViewModel extends ChangeNotifier {
   void Function(dynamic)? _onBattleState;
 
   String get matchId => matchStart['matchId']?.toString() ?? "";
+
   String get roomId => matchStart['roomId']?.toString() ?? "";
 
   String get myId => GameManager.instance.assignedId ?? "";
 
-  Map<String, dynamic> get p1 => Map<String, dynamic>.from(matchStart['p1'] ?? {});
-  Map<String, dynamic> get p2 => Map<String, dynamic>.from(matchStart['p2'] ?? {});
+  Map<String, dynamic> get p1 =>
+      Map<String, dynamic>.from(matchStart['p1'] ?? {});
+
+  Map<String, dynamic> get p2 =>
+      Map<String, dynamic>.from(matchStart['p2'] ?? {});
 
   String get opponentId {
     final p1Id = p1['id']?.toString() ?? "";
@@ -52,39 +56,89 @@ class BattleViewModel extends ChangeNotifier {
   }
 
   bool get isActive => (state['phase']?.toString() ?? "") == "ACTIVE";
+
   String get turnUserId => state['turnUserId']?.toString() ?? "";
+
   bool get myTurn => isActive && turnUserId == myId;
 
   Map<String, dynamic> get myActive {
     final active = state['active'];
-    if (active is Map && active[myId] is Map) return Map<String, dynamic>.from(active[myId]);
+    if (active is Map && active[myId] is Map) {
+      return Map<String, dynamic>.from(active[myId]);
+    }
     return {};
   }
 
   Map<String, dynamic> get oppActive {
     final active = state['active'];
     final opp = opponentId;
-    if (active is Map && active[opp] is Map) return Map<String, dynamic>.from(active[opp]);
+    if (active is Map && active[opp] is Map) {
+      return Map<String, dynamic>.from(active[opp]);
+    }
     return {};
   }
 
   int get myHp => int.tryParse(myActive['currentHp']?.toString() ?? "") ?? 0;
+
   int get oppHp => int.tryParse(oppActive['currentHp']?.toString() ?? "") ?? 0;
 
   String? get myGifUrl => myActive['sprite']?.toString();
+
   String? get oppGifUrl => oppActive['sprite']?.toString();
 
   void attack() {
     if (!myTurn) return;
-    GameManager.instance.socket.emit(SocketEvents.battleAttack, {"matchId": matchId});
+    GameManager.instance.socket.emit(SocketEvents.battleAttack, {
+      "matchId": matchId,
+    });
   }
 
-  dynamic _unwrap(dynamic data) => (data is List && data.isNotEmpty) ? data.first : data;
+  dynamic _unwrap(dynamic data) =>
+      (data is List && data.isNotEmpty) ? data.first : data;
+
+  bool get isFinished => (state['phase']?.toString() ?? "") == "FINISHED";
+
+  String get winnerId => state['winnerId']?.toString() ?? "";
+
+  bool get iWon => isFinished && winnerId.isNotEmpty && winnerId == myId;
+
+  String get opponentName {
+    final p1m = Map<String, dynamic>.from(matchStart['p1'] ?? {});
+    final p2m = Map<String, dynamic>.from(matchStart['p2'] ?? {});
+    return (p1m['id']?.toString() == myId)
+        ? (p2m['name']?.toString() ?? "Opponent")
+        : (p1m['name']?.toString() ?? "Opponent");
+  }
+
+  int pokemonsLeft(String playerId) {
+    final players = state['players'];
+    if (players is! Map) return 0;
+
+    final p = players[playerId];
+    if (p is! Map) return 0;
+
+    final team = p['team'];
+    final activeIndex = int.tryParse(p['activeIndex']?.toString() ?? '') ?? 0;
+
+    final total = (team is List) ? team.length : 0;
+    final left = total - activeIndex; // includes current
+    return left < 0 ? 0 : left;
+  }
+
+  int get oppLivesLeft {
+    return pokemonsLeft(opponentId);
+  }
+
+  int get myLivesLeft {
+    return pokemonsLeft(myId);
+  }
 
   @override
   void dispose() {
     final s = GameManager.instance.socket;
-    if (_onBattleState != null) s.off(SocketEvents.battleState, _onBattleState!);
+    if (_onBattleState != null) {
+      s.off(SocketEvents.battleState, _onBattleState!);
+    }
     super.dispose();
   }
 }

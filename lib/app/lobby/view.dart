@@ -1,6 +1,7 @@
 import 'package:albokemon_app/app/battle/view.dart';
 import 'package:albokemon_app/app/lobby/model.dart';
 import 'package:albokemon_app/app/login/view.dart';
+import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/nav.dart';
@@ -76,6 +77,10 @@ class _LobbyViewState extends State<LobbyView> {
     });
 
     _model.refresh();
+
+    if(!Audio.instance.isPLaying()){
+      Audio.instance.playLoop('assets/bgm/menu.mp3');
+    }
   }
 
   @override
