@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/nav.dart';
 import 'package:albokemon_app/shared/utils/theme.dart';
@@ -25,6 +26,7 @@ class _BattleViewState extends State<BattleView> {
   bool _flashMy = false;
   bool _flashOpp = false;
   int _lastEventsLen = 0;
+  int _lastTurnProcessed = -1;
 
   @override
   void initState() {
@@ -38,13 +40,13 @@ class _BattleViewState extends State<BattleView> {
   void _onModel() {
     if (!mounted) return;
 
-    // trigger simple flash on new hit events
-    final ev = _model.events;
-    if (ev.length > _lastEventsLen) {
-      final newEvents = ev.sublist(_lastEventsLen);
-      _lastEventsLen = ev.length;
+    final turn = int.tryParse(_model.state['turn']?.toString() ?? '') ?? -1;
 
-      for (final e in newEvents) {
+    // Only process battle events once per new turn update
+    if (turn != -1 && turn != _lastTurnProcessed) {
+      _lastTurnProcessed = turn;
+
+      for (final e in _model.events) {
         if (e['type'] == 'hit') {
           final to = e['to']?.toString();
           if (to == _model.myId) _pulseMy();
@@ -81,22 +83,29 @@ class _BattleViewState extends State<BattleView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 64),
-            // Enemy Display
-            enemyDisplay(),
-            const Spacer(),
-            // My Display
-            myDisplay(),
-            _model.isFinished ? resultBox() : actionBox(),
-          ],
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset('assets/image/battle_bg.jpg', fit: BoxFit.cover),
         ),
-      ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 64),
+                // Enemy Display
+                enemyDisplay(),
+                const Spacer(),
+                // My Display
+                myDisplay(),
+                _model.isFinished ? resultBox() : actionBox(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -141,58 +150,59 @@ class _BattleViewState extends State<BattleView> {
   Widget actionBox() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.18), // glass
-          border: Border.all(color: Colors.black.withOpacity(0.28)),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'POKEMON: ${_model.myActive['name'] ?? '-'}',
-                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'POKEMON HP: ${_model.myHp}',
-                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'POKEMON LEFT: ${_model.myLivesLeft}',
-                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'CURRENT TURN: ${_model.myTurn ? "YOU" : "OPPONENT"}',
-                  style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: WidgetButton(
-                label: _model.myTurn ? 'ATTACK' : "WAITING",
-                height: 64,
-                width: 128,
-                isEnabled: _model.myTurn,
-                onTap: () {
-                  _model.attack();
-                },
-                colorFill: Colors.white,
-                colorBorder: ATheme.TEXT_COLOR,
-                colorText: ATheme.TEXT_COLOR,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.30), // frosted tint
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'POKEMON: ${(_model.myActive['name'] ?? '-').toString().toUpperCase()}',
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'POKEMON HP: ${_model.myHp}',
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'POKEMON LEFT: ${_model.myLivesLeft}',
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'CURRENT TURN: ${_model.myTurn ? "YOU" : "OPPONENT"}',
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Flexible(
+                child: WidgetButton(
+                  label: _model.myTurn ? 'ATTACK' : "WAITING",
+                  height: 64,
+                  width: 128,
+                  isEnabled: _model.myTurn,
+                  onTap: _model.attack,
+                  colorFill: Colors.white,
+                  colorBorder: ATheme.TEXT_COLOR,
+                  colorText: ATheme.TEXT_COLOR,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -212,17 +222,36 @@ class _BattleViewState extends State<BattleView> {
           index: 3,
         ),
 
-        // Player (bottom-left-ish)
         if (myGif != null)
           Transform.translate(
             offset: const Offset(-20, -30),
-            child: _gifSprite(
-              url: myGif,
-              greyedOut: !_model.myTurn,
-              flipX: true,
-              flash: _flashMy,
-              width: 128,
-              height: 128,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: (128 - 70) / 2, // center it (tweak)
+                  top: 96, // push below (tweak)
+                  child: Opacity(
+                    opacity: 0.35,
+                    child: Container(
+                      width: 64,
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+
+                _gifSprite(
+                  url: myGif,
+                  flipX: true,
+                  flash: _flashMy,
+                  width: 128,
+                  height: 128,
+                ),
+              ],
             ),
           ),
       ],
@@ -246,7 +275,7 @@ class _BattleViewState extends State<BattleView> {
                 style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
               ),
               Text(
-                'POKEMON:  ${_model.oppActive['name'] ?? '-'}',
+                'POKEMON:  ${(_model.oppActive['name'] ?? '-').toString().toUpperCase()}',
                 style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
               ),
               Text(
@@ -262,9 +291,33 @@ class _BattleViewState extends State<BattleView> {
         ),
         const Spacer(),
         if (oppGif != null)
-          _gifSprite(url: oppGif, greyedOut: !_model.myTurn, flash: _flashOpp),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // shadow behind + below enemy gif
+              Positioned(
+                left: (64 - 70) / 2,
+                // assumes gif is ~128 wide; tweak if different
+                top: 64 - 30,
+                child: Opacity(
+                  opacity: 0.35,
+                  child: Container(
+                    width: 70,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+
+              _gifSprite(url: oppGif, flash: _flashOpp, width: 64, height: 64),
+            ],
+          ),
+
         Transform.translate(
-          offset: const Offset(0, -40), // move up (tweak this)
+          offset: const Offset(0, -40),
           child: Image.asset('assets/image/trainer_front.png', scale: 0.8),
         ),
       ],
@@ -273,7 +326,7 @@ class _BattleViewState extends State<BattleView> {
 
   Widget _gifSprite({
     required String url,
-    required bool greyedOut,
+    bool greyedOut = false,
     required bool flash,
     double width = 80,
     double height = 80,

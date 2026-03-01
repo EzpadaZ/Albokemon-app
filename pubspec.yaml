@@ -32,6 +32,11 @@ flutter:
    - assets/image/trainer_back.png
    - assets/image/main_bg.jpg
    - assets/image/snorlax_sleeping.gif
+   - assets/image/battle_bg.jpg
+   - assets/image/lobby_bg.jpg
+   - assets/sfx/button_click.wav
+   - assets/sfx/self_hurt.wav
+   - assets/sfx/attack_opponent.wav
 
   fonts:
    - family: Monocraft

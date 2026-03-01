@@ -1,31 +1,42 @@
-import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:albokemon_app/shared/utils/game_manager.dart';
 
 class Audio {
   Audio._();
   static final Audio instance = Audio._();
 
-  final _player = AudioPlayer();
-  bool _ready = false;
+  final AudioPlayer _bgm = AudioPlayer();
+  bool _bgmReady = false;
 
   Future<void> playLoop(String assetPath) async {
-    if (!_ready) {
-      await _player.setLoopMode(LoopMode.one);
-      _ready = true;
+    if (!_bgmReady) {
+      await _bgm.setLoopMode(LoopMode.one);
+      _bgmReady = true;
     }
-    await _player.setAsset(assetPath);
-    _player.setVolume(GameManager.instance.music_volume);
-    await _player.play();
+    await _bgm.setAsset(assetPath);
+    _bgm.setVolume(GameManager.instance.music_volume);
+    await _bgm.play();
   }
 
-  updateVolume(){
-    _player.setVolume(GameManager.instance.music_volume);
+  Future<void> playSfx(String assetPath) async {
+    final p = AudioPlayer();
+    try {
+      await p.setAsset(assetPath);
+      p.setVolume(5 * GameManager.instance.music_volume);
+      await p.play();
+    } finally {
+      await p.dispose();
+    }
   }
 
-  isPLaying() {
-    return _player.playing;
+  void updateVolume() {
+    _bgm.setVolume(GameManager.instance.music_volume);
   }
 
-  Future<void> stop() => _player.stop();
-  Future<void> dispose() => _player.dispose();
+  isPlaying() {
+    return _bgm.playing;
+  }
+
+  Future<void> stop() => _bgm.stop();
+  Future<void> dispose() => _bgm.dispose();
 }

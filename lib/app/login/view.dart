@@ -9,6 +9,7 @@ import 'package:albokemon_app/shared/widgets/text_field.dart';
 import 'package:albokemon_app/shared/widgets/text_pulse.dart';
 import 'package:albokemon_app/shared/widgets/thirdparty/pixel_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import 'model.dart';
@@ -125,6 +126,7 @@ class _LoginViewState extends State<LoginView> {
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
                     onTap: () async {
+                      HapticFeedback.mediumImpact();
                       if (showTextfield && _model.username.isNotEmpty) {
                         await _model.execute();
                       } else {
@@ -158,6 +160,8 @@ class _LoginViewState extends State<LoginView> {
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
                     onTap: () async {
+                      HapticFeedback.mediumImpact();
+                      Audio.instance.playSfx('assets/sfx/button_click.wav');
                       setState(() {
                         showSettings = !showSettings;
                       });
