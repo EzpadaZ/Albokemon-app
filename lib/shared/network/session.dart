@@ -27,15 +27,14 @@ class Session {
         }
       };
 
-
       client.on(SocketEvents.authOk, _onAuthOk!);
     } catch (e) {
       Logger.instance.error("Error on initListeners: ${e.toString()}");
     }
   }
 
-  void login(String name) {
-    client.emit(SocketEvents.authLogin, {"name": name});
+  void login(String name, Map<String, dynamic> metadata) {
+    client.emit(SocketEvents.authLogin, {"name": name, "metadata": metadata});
   }
 
   void reset() {

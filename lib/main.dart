@@ -1,4 +1,5 @@
 import 'package:albokemon_app/app/login/view.dart';
+import 'package:albokemon_app/shared/utils/device.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/nav.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   GameManager.instance.init();
+  Device.init();
   runApp(const MyApp());
 }
 

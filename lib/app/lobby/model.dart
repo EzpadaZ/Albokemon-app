@@ -180,11 +180,9 @@ class LobbyViewModel extends ChangeNotifier {
     final s = GameManager.instance.socket;
     if (_onUsers != null) s.off(SocketEvents.lobbyUsers, _onUsers!);
     if (_onUpdated != null) s.off(SocketEvents.lobbyUpdated, _onUpdated!);
-    if (_onMatchInvite != null)
-      s.off(SocketEvents.matchInvite, _onMatchInvite!);
+    if (_onMatchInvite != null) s.off(SocketEvents.matchInvite, _onMatchInvite!);
     if (_onMatchStart != null) s.off(SocketEvents.matchStart, _onMatchStart!);
-    if (_onMatchDeclined != null)
-      s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
+    if (_onMatchDeclined != null) s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
     if (_onErr != null) s.off(SocketEvents.err, _onErr!);
     Audio.instance.stop();
     super.dispose();

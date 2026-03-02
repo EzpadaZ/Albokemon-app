@@ -14,7 +14,8 @@ class GameManager {
   bool _init = false;
 
   double music_volume = 0.2;
-  String connectionString = "http://192.168.3.201:3001";
+  //String connectionString = "http://192.168.3.201:8080";
+  String connectionString = "https://albokemon-backend-468858143339.us-central1.run.app/";
 
   void init() {
     if (_init) return;
