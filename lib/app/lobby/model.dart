@@ -83,9 +83,9 @@ class LobbyViewModel extends ChangeNotifier {
         sentInvites = [];
         ScaffoldMessenger.of(Nav.routeObserver.navigator!.context).showSnackBar(
           SnackBar(
-            content: Text(
-              'User is in match!',
-              style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+            content: DefaultTextStyle.merge(
+              style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH, color: ATheme.BACKGROUND_COLOR),
+              child: Text('User is in match!'),
             ),
           ),
         );
@@ -107,7 +107,6 @@ class LobbyViewModel extends ChangeNotifier {
 
   void requestMatch(String targetUserId) {
     try {
-      // IMPORTANT: if your backend expects { targetUser } instead, change the key.
       GameManager.instance.socket.emit(SocketEvents.matchRequest, {
         "targetUserId": targetUserId,
       });

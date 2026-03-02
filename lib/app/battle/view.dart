@@ -144,29 +144,32 @@ class _BattleViewState extends State<BattleView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset('assets/image/battle_bg.jpg', fit: BoxFit.cover),
-        ),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 64),
-                // Enemy Display
-                enemyDisplay(),
-                const Spacer(),
-                // My Display
-                myDisplay(),
-                _model.isFinished ? resultBox() : actionBox(),
-              ],
+    return PopScope(
+      canPop: false,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/image/battle_bg.jpg', fit: BoxFit.cover),
+          ),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            body: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 64),
+                  // Enemy Display
+                  enemyDisplay(),
+                  const Spacer(),
+                  // My Display
+                  myDisplay(),
+                  _model.isFinished ? resultBox() : actionBox(),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

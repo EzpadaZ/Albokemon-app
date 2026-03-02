@@ -101,80 +101,83 @@ class _LobbyViewState extends State<LobbyView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset('assets/image/lobby_bg.jpg', fit: BoxFit.cover),
-        ),
-        Scaffold(
-          extendBodyBehindAppBar: true,
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/image/lobby_bg.jpg', fit: BoxFit.cover),
+          ),
+          Scaffold(
+            extendBodyBehindAppBar: true,
             backgroundColor: Colors.transparent,
-            elevation: 0,
-            surfaceTintColor: Colors.transparent,
-            title: Text(
-              context.i18n.lobby_title,
-              style: ATheme.textStyle(size: FONT_SIZE.H2),
-            ),
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.mediumImpact();
-                  Audio.instance.playSfx('assets/sfx/button_click.wav');
-                  Logger.instance.info(
-                    "Disconnect Action: ${GameManager.instance.assignedId}",
-                  );
-                  GameManager.instance.disconnect();
-                  Nav.navigateAndReplaceAll(view: const LoginView());
-                },
-                child: Container(
-                  decoration: ShapeDecoration(
-                    shape: PixelBorder.solid(
-                      borderRadius: BorderRadius.circular(2.0),
-                      pixelSize: 0.5,
-                      color: ATheme.FOREGROUND_COLOR,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              title: Text(
+                context.i18n.lobby_title,
+                style: ATheme.textStyle(size: FONT_SIZE.H2),
+              ),
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    Audio.instance.playSfx('assets/sfx/button_click.wav');
+                    Logger.instance.info(
+                      "Disconnect Action: ${GameManager.instance.assignedId}",
+                    );
+                    GameManager.instance.disconnect();
+                    Nav.navigateAndReplaceAll(view: const LoginView());
+                  },
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      shape: PixelBorder.solid(
+                        borderRadius: BorderRadius.circular(2.0),
+                        pixelSize: 0.5,
+                        color: ATheme.FOREGROUND_COLOR,
+                      ),
                     ),
-                  ),
-                  width: 16,
-                  height: 16,
-                  child: Center(
-                    child: Text(
-                      '<',
-                      style: ATheme.textStyle(size: FONT_SIZE.H2),
+                    width: 16,
+                    height: 16,
+                    child: Center(
+                      child: Text(
+                        '<',
+                        style: ATheme.textStyle(size: FONT_SIZE.H2),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            // glass effect
-            flexibleSpace: ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.10),
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white.withOpacity(0.22)),
+              // glass effect
+              flexibleSpace: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.10),
+                      border: Border(
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.22)),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Flexible(child: lobby()),
-                characterFooter(),
-              ],
+            body: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Flexible(child: lobby()),
+                  characterFooter(),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -217,7 +220,7 @@ class _LobbyViewState extends State<LobbyView> {
               filterQuality: FilterQuality.none,
             ),
           ),
-          const RunningPikachu(bottom: 10, size: 64),
+          const RunningPikachu(bottom: -64,  size: 64),
         ],
       ),
     );

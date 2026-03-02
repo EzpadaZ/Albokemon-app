@@ -28,6 +28,18 @@ class GameManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setConnectionString(String url) {
+    connectionString = url.trim();
+    if (connectionString.isEmpty) return;
+
+    // if already initialized, rebuild client/session with new URL
+    if (_init) {
+      session.reset();
+      socket.dispose();
+      _init = false;
+    }
+  }
+
   Locale effectiveLocale(BuildContext context) =>
       _locale ?? Localizations.localeOf(context);
 
