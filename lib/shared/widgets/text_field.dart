@@ -2,6 +2,7 @@ import 'package:albokemon_app/shared/utils/theme.dart';
 import 'package:albokemon_app/shared/widgets/thirdparty/pixel_border.dart';
 import 'package:flutter/material.dart';
 
+// ignore: must_be_immutable
 class WidgetTextField extends StatefulWidget {
   void Function(String) onChange;
   Function()? onTap;
@@ -48,11 +49,14 @@ class _WidgetTextFieldState extends State<WidgetTextField> {
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
           hintText: widget.hintText,
-          hintStyle: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH, color: ATheme.TEXT_HINT),
+          hintStyle: ATheme.textStyle(
+            size: FONT_SIZE.PARAGRAPH,
+            color: ATheme.TEXT_HINT,
+          ),
           border: InputBorder.none,
           isDense: true,
           counterText: "",
-          counter: null
+          counter: null,
         ),
         maxLength: widget.maxLength,
         onChanged: (value) {
