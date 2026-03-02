@@ -372,8 +372,8 @@ class _LoginViewState extends State<LoginView> {
                     initialValue: editedConnection,
                     hintText: "http://localhost:3001",
                     onChange: (p) {
-                      GameManager.instance.connectionString = p;
                       editedConnection = p;
+                      GameManager.instance.setConnectionString(p);
                     },
                   ),
                 ],

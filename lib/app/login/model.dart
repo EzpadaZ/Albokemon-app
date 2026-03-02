@@ -69,7 +69,9 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   connect() async {
+    GameManager.instance.init();
     final socket = GameManager.instance.socket;
+
     socket.connect(); // idempotent in our wrapper
 
     if (socket.isConnected.value) return;
