@@ -6,8 +6,6 @@ import 'package:albokemon_app/shared/utils/theme.dart';
 import 'package:albokemon_app/shared/widgets/button.dart';
 import 'package:albokemon_app/shared/widgets/sprite.dart';
 import 'package:flutter/material.dart';
-import '../../shared/network/events.dart';
-import '../../shared/utils/game_manager.dart';
 import '../lobby/view.dart';
 import 'model.dart';
 

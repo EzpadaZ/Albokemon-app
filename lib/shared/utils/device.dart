@@ -30,7 +30,7 @@ class Device {
   static getOSVersion() {
     // returns platform release version
     return (Platform.isIOS)
-        ? _iosDeviceInfo.systemVersion!
+        ? _iosDeviceInfo.systemVersion
         : _androidDeviceInfo.version.release;
   }
 
@@ -50,7 +50,7 @@ class Device {
 
   static getDeviceBrandModel() {
     if (Platform.isIOS) {
-      return _iosDeviceInfo.model!.toLowerCase();
+      return _iosDeviceInfo.model.toLowerCase();
     } else {
       return ('${_androidDeviceInfo.brand} - ${_androidDeviceInfo.model}')
           .toLowerCase();
