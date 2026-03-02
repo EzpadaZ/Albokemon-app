@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:albokemon_app/app/lobby/view.dart';
+import 'package:albokemon_app/shared/utils/device.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/nav.dart';
@@ -57,7 +58,7 @@ class LoginViewModel extends ChangeNotifier {
 
     if (session.me.value != null) return;
 
-    session.login(name);
+    session.login(name, Device.getDeviceMetadata());
 
     await _waitValue<Map<String, dynamic>?>(
       listenable: session.me,
