@@ -297,7 +297,7 @@ class _LoginViewState extends State<LoginView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Volumen',
+                    context.i18n.settings_volume,
                     style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
                   ),
                   Row(
