@@ -10,6 +10,9 @@ class SocketClient {
 
   final ValueNotifier<bool> isConnected = ValueNotifier(false);
 
+  // event -> (originalHandler -> wrappedHandler)
+  final Map<String, Map<Function(dynamic), dynamic>> _wrappedHandlersByEvent = {};
+
   IO.Socket get socket {
     final s = _socket;
     if (s == null) {
@@ -48,21 +51,36 @@ class SocketClient {
     socket.emit(event, data);
   }
 
-  /// Registers an event listener. Keep a reference to the handler if you want to `off`.
   void on(String event, Function(dynamic) handler) {
-    socket.on(event, handler);
+    void wrapped(dynamic data) {
+      final payload = (data is List && data.isNotEmpty) ? data.first : data;
+      handler(payload);
+    }
+
+    final map = _wrappedHandlersByEvent.putIfAbsent(event, () => {});
+    map[handler] = wrapped;
+
+    socket.on(event, wrapped);
   }
 
-  /// Unregisters an event listener. If handler is null, removes all listeners for event.
+  /// If handler is null, removes all listeners for that event.
   void off(String event, [Function(dynamic)? handler]) {
     if (handler == null) {
+      _wrappedHandlersByEvent.remove(event);
       socket.off(event);
-    } else {
-      socket.off(event, handler);
+      return;
     }
+
+    final wrapped = _wrappedHandlersByEvent[event]?.remove(handler);
+    if (_wrappedHandlersByEvent[event]?.isEmpty ?? false) {
+      _wrappedHandlersByEvent.remove(event);
+    }
+
+    socket.off(event, wrapped ?? handler);
   }
 
   void dispose() {
+    _wrappedHandlersByEvent.clear();
     _socket?.dispose();
     _socket = null;
     isConnected.value = false;

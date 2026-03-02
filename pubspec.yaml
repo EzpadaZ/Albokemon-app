@@ -10,6 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   cupertino_icons: ^1.0.8
   socket_io_client: ^3.1.4
@@ -24,6 +27,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
    - assets/image/logo.png
@@ -33,6 +37,9 @@ flutter:
    - assets/image/trainer_back.png
    - assets/image/main_bg.jpg
    - assets/image/snorlax_sleeping.gif
+   - assets/image/bulbasaur.gif
+   - assets/image/pikachu_running.gif
+   - assets/image/snorlax_fight.gif
    - assets/image/battle_bg.jpg
    - assets/image/lobby_bg.jpg
    - assets/image/heart.png

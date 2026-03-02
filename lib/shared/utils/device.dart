@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:albokemon_app/l10n/app_localizations.dart';
+import 'package:albokemon_app/shared/utils/logger.dart';
+import 'package:albokemon_app/shared/utils/nav.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 class Device {

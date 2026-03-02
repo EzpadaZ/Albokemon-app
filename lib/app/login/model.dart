@@ -56,8 +56,6 @@ class LoginViewModel extends ChangeNotifier {
     final session = GameManager.instance.session;
     session.initListeners();
 
-    if (session.me.value != null) return;
-
     session.login(name, Device.getDeviceMetadata());
 
     await _waitValue<Map<String, dynamic>?>(

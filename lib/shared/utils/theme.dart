@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum FONT_SIZE { H0, H1, H2, H3, H4, PARAGRAPH, SMALL, TINY }
 
-enum FONT_STYLE { REGULAR, BOLD, SEMIBOLD }
+enum FONT_STYLE { REGULAR, BOLD, SEMIBOLD, ITALIC }
 
 enum FONT_DECORATION { UNDERLINE, LINE_THROUGH, OVERLINE, NONE }
 
@@ -80,8 +80,13 @@ class ATheme {
     }
 
     FontWeight fontWeight;
+    FontStyle fontStyle = FontStyle.normal;
     switch (style) {
       case FONT_STYLE.REGULAR:
+        fontWeight = FontWeight.w400;
+        break;
+      case FONT_STYLE.ITALIC:
+        fontStyle = FontStyle.italic;
         fontWeight = FontWeight.w400;
         break;
       case FONT_STYLE.BOLD:
@@ -120,6 +125,7 @@ class ATheme {
     return TextStyle(
       fontFamily: fontFamily,
       fontWeight: fontWeight,
+      fontStyle: fontStyle,
       decoration: textDecoration,
       color: color,
       fontSize: fontSize,

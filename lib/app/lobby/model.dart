@@ -26,9 +26,8 @@ class LobbyViewModel extends ChangeNotifier {
 
   LobbyViewModel() {
     _onUsers = (dynamic data) {
-      var payload = _unwrap(data);
-      final list = (payload is Map) ? payload['users'] : null;
-
+      if (data is! Map) return;
+      final list = data['users'];
       if (list is List) {
         users = list
             .whereType<Map>()
@@ -169,6 +168,7 @@ class LobbyViewModel extends ChangeNotifier {
   void refresh() {
     try {
       GameManager.instance.socket.emit(SocketEvents.lobbyList);
+      Logger.instance.info("Lobby refresh -> emit lobby/list");
     } catch (e) {
       error = e.toString();
       Logger.instance.error("Lobby refresh error: $error");
@@ -180,9 +180,11 @@ class LobbyViewModel extends ChangeNotifier {
     final s = GameManager.instance.socket;
     if (_onUsers != null) s.off(SocketEvents.lobbyUsers, _onUsers!);
     if (_onUpdated != null) s.off(SocketEvents.lobbyUpdated, _onUpdated!);
-    if (_onMatchInvite != null) s.off(SocketEvents.matchInvite, _onMatchInvite!);
+    if (_onMatchInvite != null)
+      s.off(SocketEvents.matchInvite, _onMatchInvite!);
     if (_onMatchStart != null) s.off(SocketEvents.matchStart, _onMatchStart!);
-    if (_onMatchDeclined != null) s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
+    if (_onMatchDeclined != null)
+      s.off(SocketEvents.matchDeclined, _onMatchDeclined!);
     if (_onErr != null) s.off(SocketEvents.err, _onErr!);
     Audio.instance.stop();
     super.dispose();

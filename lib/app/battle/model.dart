@@ -1,26 +1,113 @@
 import 'package:albokemon_app/shared/utils/audio.dart';
+import 'package:albokemon_app/shared/utils/locale.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../shared/network/events.dart';
 import '../../shared/utils/game_manager.dart';
+import '../../shared/utils/nav.dart';
 
 class BattleViewModel extends ChangeNotifier {
   BattleViewModel({required this.matchStart}) {
     _onBattleState = (dynamic data) {
-      final payload = _unwrap(data);
-      if (payload is! Map) return;
+      if (data is! Map) return;
+      final payload = data;
 
-      // payload: { matchId, state, events }
-      state = (payload['state'] is Map)
+      var prevState = state; // snapshot BEFORE update
+
+      var newState = (payload['state'] is Map)
           ? Map<String, dynamic>.from(payload['state'])
-          : {};
+          : <String, dynamic>{};
 
-      events = (payload['events'] is List)
+      var delta = (payload['events'] is List)
           ? (payload['events'] as List)
                 .whereType<Map>()
                 .map((e) => Map<String, dynamic>.from(e))
                 .toList()
-          : [];
+          : <Map<String, dynamic>>[];
+
+      // append-only logs (use i18n via navigator context)
+      final ctx = Nav.routeObserver.navigator?.context;
+      if (ctx != null) {
+        for (var e in delta) {
+          var type = e['type']?.toString() ?? '';
+
+          if (type == 'hit') {
+            var fromId = e['from']?.toString() ?? '';
+            var toId = e['to']?.toString() ?? '';
+
+            var prevActive = (prevState['active'] is Map)
+                ? Map<String, dynamic>.from(prevState['active'])
+                : <String, dynamic>{};
+
+            var fromActive = (prevActive[fromId] is Map)
+                ? Map<String, dynamic>.from(prevActive[fromId])
+                : <String, dynamic>{};
+
+            var toActive = (prevActive[toId] is Map)
+                ? Map<String, dynamic>.from(prevActive[toId])
+                : <String, dynamic>{};
+
+            logLines.add(
+              ctx.i18n.battle_logs_attack
+                  .replaceAll('%p', (fromActive['name'] ?? '-').toString())
+                  .replaceAll('%a', (toActive['name'] ?? '-').toString())
+                  .replaceAll('%n', (e['damage'] ?? 0).toString()),
+            );
+          }
+
+          if (type == 'ko' || type == 'faint') {
+            var whoId = e['who']?.toString() ?? e['to']?.toString() ?? '';
+
+            var prevActive = (prevState['active'] is Map)
+                ? Map<String, dynamic>.from(prevState['active'])
+                : <String, dynamic>{};
+
+            var whoActive = (prevActive[whoId] is Map)
+                ? Map<String, dynamic>.from(prevActive[whoId])
+                : <String, dynamic>{};
+
+            logLines.add(
+              ctx.i18n.battle_logs_faint.replaceAll(
+                '%p',
+                (whoActive['name'] ?? '-').toString(),
+              ),
+            );
+          }
+
+          if (type == 'switch' || type == 'new_entry') {
+            var whoId = e['who']?.toString() ?? e['playerId']?.toString() ?? '';
+
+            var newActive = (newState['active'] is Map)
+                ? Map<String, dynamic>.from(newState['active'])
+                : <String, dynamic>{};
+
+            var whoActive = (newActive[whoId] is Map)
+                ? Map<String, dynamic>.from(newActive[whoId])
+                : <String, dynamic>{};
+
+            logLines.add(
+              ctx.i18n.battle_logs_new_entry.replaceAll(
+                '%p',
+                (whoActive['name'] ?? '-').toString(),
+              ),
+            );
+          }
+
+          if (type == 'win') {
+            var winnerId = e['winnerId']?.toString();
+            logLines.add(
+              (winnerId == myId)
+                  ? ctx.i18n.battle_logs_win.replaceAll('%p', opponentName)
+                  : ctx.i18n.battle_logs_defeat.replaceAll('%p', opponentName),
+            );
+          }
+        }
+      }
+
+      // now apply update
+      state = newState;
+      events = delta;
 
       notifyListeners();
     };
@@ -36,6 +123,7 @@ class BattleViewModel extends ChangeNotifier {
 
   Map<String, dynamic> state = {};
   List<Map<String, dynamic>> events = [];
+  List<String> logLines = [];
 
   void Function(dynamic)? _onBattleState;
 
@@ -62,6 +150,16 @@ class BattleViewModel extends ChangeNotifier {
   String get turnUserId => state['turnUserId']?.toString() ?? "";
 
   bool get myTurn => isActive && turnUserId == myId;
+
+  int get oppMaxHp =>
+      int.tryParse(oppActive['maxHp']?.toString() ?? '') ??
+      int.tryParse(oppActive['hp']?.toString() ?? '') ??
+      0;
+
+  int get myMaxHp =>
+      int.tryParse(myActive['maxHp']?.toString() ?? '') ??
+      int.tryParse(myActive['hp']?.toString() ?? '') ??
+      0;
 
   Map<String, dynamic> get myActive {
     final active = state['active'];
@@ -96,9 +194,6 @@ class BattleViewModel extends ChangeNotifier {
       "matchId": matchId,
     });
   }
-
-  dynamic _unwrap(dynamic data) =>
-      (data is List && data.isNotEmpty) ? data.first : data;
 
   bool get isFinished => (state['phase']?.toString() ?? "") == "FINISHED";
 
