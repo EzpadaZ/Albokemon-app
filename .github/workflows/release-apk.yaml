@@ -2,7 +2,7 @@ name: Build APK and Publish Release
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
 
 permissions:
   contents: write  # required to create releases
