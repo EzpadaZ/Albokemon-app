@@ -16,14 +16,11 @@ class Session {
   void initListeners() {
     // ensure only once
     try {
-      _onAuthOk ??= (dynamic data) {
-        final payload = (data is List && data.isNotEmpty) ? data.first : data;
+      _onAuthOk ??= (dynamic payload) {
         final user = (payload is Map) ? payload["user"] : null;
-
         if (user is Map) {
-          final u = Map<String, dynamic>.from(user);
-          me.value = u;
-          GameManager.instance.assignedId = u['id'] as String?;
+          me.value = Map<String, dynamic>.from(user);
+          GameManager.instance.assignedId = me.value!['id'];
         }
       };
 
@@ -44,6 +41,7 @@ class Session {
     }
     _onAuthOk = null;
     me.value = null; // clear user
+    GameManager.instance.assignedId = null;
   }
 
   void dispose() {

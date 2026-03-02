@@ -5,9 +5,11 @@ import 'package:albokemon_app/app/lobby/model.dart';
 import 'package:albokemon_app/app/login/view.dart';
 import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
+import 'package:albokemon_app/shared/utils/locale.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/nav.dart';
 import 'package:albokemon_app/shared/utils/theme.dart';
+import 'package:albokemon_app/shared/widgets/animated/pikachu_running.dart';
 import 'package:albokemon_app/shared/widgets/button.dart';
 import 'package:albokemon_app/shared/widgets/modal.dart';
 import 'package:albokemon_app/shared/widgets/thirdparty/pixel_border.dart';
@@ -25,6 +27,7 @@ class LobbyView extends StatefulWidget {
 class _LobbyViewState extends State<LobbyView> {
   late LobbyViewModel _model;
   bool _isInviteModalDisplayed = false;
+  bool _isMatchStarting = false;
   BuildContext? _inviteCtx;
 
   void _openInviteModal() {
@@ -58,6 +61,9 @@ class _LobbyViewState extends State<LobbyView> {
     _model = LobbyViewModel();
 
     _model.addListener(() {
+      if (!mounted) return;
+      setState(() {}); // keep simple
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
 
@@ -75,11 +81,12 @@ class _LobbyViewState extends State<LobbyView> {
           Nav.navigateToWidget(view: BattleView(matchStart: ms));
         }
       });
-
-      if (mounted) setState(() {});
     });
 
-    _model.refresh();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _model.refresh(); // ✅ snapshot request when view is mounted
+    });
 
     if (!Audio.instance.isPlaying()) {
       Audio.instance.playLoop('assets/bgm/menu.mp3');
@@ -106,7 +113,10 @@ class _LobbyViewState extends State<LobbyView> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             surfaceTintColor: Colors.transparent,
-            title: Text('Lobby', style: ATheme.textStyle(size: FONT_SIZE.H2)),
+            title: Text(
+              context.i18n.lobby_title,
+              style: ATheme.textStyle(size: FONT_SIZE.H2),
+            ),
             leading: Padding(
               padding: const EdgeInsets.all(8.0),
               child: GestureDetector(
@@ -154,9 +164,62 @@ class _LobbyViewState extends State<LobbyView> {
               ),
             ),
           ),
-          body: SafeArea(child: lobby()),
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Flexible(child: lobby()),
+                characterFooter(),
+              ],
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget characterFooter() {
+    return SizedBox(
+      height: 164,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 128,
+            bottom: 80,
+            child: Image.asset(
+              'assets/image/snorlax_fight.gif',
+              height: 64,
+              width: 64,
+              filterQuality: FilterQuality.none,
+            ),
+          ),
+          Positioned(
+            left: 64,
+            bottom: 80,
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()..scale(-1.0, 1.0), // flip X
+              child: Image.asset(
+                'assets/image/snorlax_fight.gif',
+                height: 64,
+                width: 64,
+                filterQuality: FilterQuality.none,
+              ),
+            ),
+          ),
+          Positioned(
+            right: 10,
+            bottom: 64,
+            child: Image.asset(
+              'assets/image/bulbasaur.gif',
+              height: 64,
+              width: 64,
+              filterQuality: FilterQuality.none,
+            ),
+          ),
+          const RunningPikachu(bottom: 10, size: 64),
+        ],
+      ),
     );
   }
 
@@ -167,12 +230,15 @@ class _LobbyViewState extends State<LobbyView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '${_model.pendingInvite['fromName']} wants to battle!',
+            context.i18n.lobby_invite_message.replaceAll(
+              '%p',
+              (_model.pendingInvite['fromName']?.toString() ?? ''),
+            ),
             style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
           ),
           const SizedBox(height: 16),
           WidgetButton(
-            label: 'ACCEPT',
+            label: context.i18n.lobby_invite_accept,
             width: 128,
             height: 42,
             onTap: () {
@@ -186,7 +252,7 @@ class _LobbyViewState extends State<LobbyView> {
           ),
           const SizedBox(height: 8),
           WidgetButton(
-            label: 'DECLINE',
+            label: context.i18n.lobby_invite_reject,
             width: 128,
             height: 42,
             onTap: () {
@@ -231,7 +297,10 @@ class _LobbyViewState extends State<LobbyView> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 8),
                   child: Text(
-                    "Online: ${_model.users.length} (including self)",
+                    context.i18n.lobby_online_tag.replaceAll(
+                      '%p',
+                      _model.users.length.toString(),
+                    ),
                     textAlign: TextAlign.left,
                     style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
                   ),
@@ -284,7 +353,7 @@ class _LobbyViewState extends State<LobbyView> {
                     size: 42.0,
                   )
                 : WidgetButton(
-                    label: 'Battle',
+                    label: context.i18n.lobby_battle_button,
                     width: 128,
                     height: 42,
                     onTap: () {

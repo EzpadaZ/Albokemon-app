@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import '../../shared/utils/locale.dart';
+import '../../shared/utils/nav.dart';
 import 'model.dart';
 
 class LoginView extends StatefulWidget {
@@ -29,7 +31,6 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   void initState() {
-    // TODO: implement initState
     _model = LoginViewModel();
     Audio.instance.playLoop('assets/bgm/menu.mp3');
     editedConnection = GameManager.instance.connectionString;
@@ -86,7 +87,9 @@ class _LoginViewState extends State<LoginView> {
           ),
           const SizedBox(height: 24),
           Text(
-            _model.isConnected ? "Haciendo Login!" : "Conectando al servidor",
+            _model.isConnected
+                ? context.i18n.login_auth_con
+                : context.i18n.login_server_con,
             textAlign: TextAlign.center,
             style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
           ),
@@ -105,7 +108,7 @@ class _LoginViewState extends State<LoginView> {
           SizedBox(height: 76, child: Image.asset('assets/image/logo.png')),
           const SizedBox(height: 8),
           Text(
-            'Made by J.Espadas (2026)',
+            context.i18n.login_logo_desc,
             textAlign: TextAlign.center,
             style: ATheme.textStyle(
               size: FONT_SIZE.SMALL,
@@ -119,7 +122,7 @@ class _LoginViewState extends State<LoginView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                width: 200, // pick a value that fits your longest label
+                width: 220, // pick a value that fits your longest label
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
@@ -139,7 +142,7 @@ class _LoginViewState extends State<LoginView> {
                       }
                     },
                     child: SmoothColorText(
-                      '> JUGAR',
+                      context.i18n.login_play,
                       colorA: ATheme.LIGHT_DARK_GREEN,
                       colorB: ATheme.DARK_GREEN,
                       glass: false,
@@ -154,7 +157,7 @@ class _LoginViewState extends State<LoginView> {
               ),
               const SizedBox(height: 24),
               SizedBox(
-                width: 200,
+                width: 220,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
@@ -166,7 +169,7 @@ class _LoginViewState extends State<LoginView> {
                       });
                     },
                     child: SmoothColorText(
-                      '> AJUSTES',
+                      context.i18n.login_settings,
                       colorA: ATheme.LIGHT_DARK_GREEN,
                       colorB: ATheme.DARK_GREEN,
                       glass: false,
@@ -183,7 +186,7 @@ class _LoginViewState extends State<LoginView> {
           ),
           const Spacer(),
           Text(
-            'Bienvenido a Albokémon\nProyecto para la prueba tecnica de \nSr. Software Engineer de Albo\n\n 2026 Flutter + Sockets.IO',
+            context.i18n.login_footer,
             style: ATheme.textStyle(size: FONT_SIZE.H4, style: FONT_STYLE.BOLD),
             textAlign: TextAlign.center,
           ),
@@ -227,13 +230,68 @@ class _LoginViewState extends State<LoginView> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'AJUSTES',
+                context.i18n.settings_title,
                 style: ATheme.textStyle(
                   size: FONT_SIZE.H4,
                   style: FONT_STYLE.BOLD,
                 ),
               ),
               const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                     context.i18n.settings_language,
+                    style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          GameManager.instance.prevLocale(context);
+                        },
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              '<',
+                              style: ATheme.textStyle(
+                                size: FONT_SIZE.PARAGRAPH,
+                                style: FONT_STYLE.BOLD,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        GameManager.instance.localeLabel(context),
+                        style: ATheme.textStyle(
+                          size: FONT_SIZE.PARAGRAPH,
+                          style: FONT_STYLE.BOLD,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: () {
+                          GameManager.instance.nextLocale(context);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            '>',
+                            style: ATheme.textStyle(
+                              size: FONT_SIZE.PARAGRAPH,
+                              style: FONT_STYLE.BOLD,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -300,11 +358,12 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Server Address',
+                    context.i18n.settings_server_address,
                     style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
                   ),
                   WidgetTextField(
@@ -330,7 +389,7 @@ class _LoginViewState extends State<LoginView> {
       children: [
         WidgetTextField(
           value: _model.username.isNotEmpty ? _model.username : username,
-          hintText: "Introduce tu nombre de jugador",
+          hintText: context.i18n.login_textfield_hint,
           maxLength: 8,
           initialValue: username,
           onChange: (v) {
