@@ -4,6 +4,7 @@ import 'package:albokemon_app/shared/utils/audio.dart';
 import 'package:albokemon_app/shared/utils/game_manager.dart';
 import 'package:albokemon_app/shared/utils/logger.dart';
 import 'package:albokemon_app/shared/utils/theme.dart';
+import 'package:albokemon_app/shared/widgets/animated/pikachu_running.dart';
 import 'package:albokemon_app/shared/widgets/text_field.dart';
 import 'package:albokemon_app/shared/widgets/text_pulse.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../shared/utils/locale.dart';
-import '../../shared/utils/nav.dart';
 import 'model.dart';
 
 class LoginView extends StatefulWidget {
@@ -59,6 +59,7 @@ class _LoginViewState extends State<LoginView> {
                       fit: BoxFit.cover, // usually better than fill
                     ),
                   ),
+                  RunningPikachu(bottom: MediaQuery.of(context).size.height * 0.45, duration: const Duration(seconds: 5),),
                   Positioned(
                     bottom: 216,
                     left: MediaQuery.of(context).size.width * 0.5,

@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 class RunningPikachu extends StatefulWidget {
   const RunningPikachu({
     super.key,
-    this.bottom = 10,
+    this.bottom,
     this.size = 64,
     this.startLeft = -64,
+    this.top,
     this.duration = const Duration(seconds: 3),
   });
 
-  final double bottom;
+  final double? bottom;
   final double size;
   final double startLeft; // negative = start hidden on left
   final Duration duration;
+  final double? top;
 
   @override
   State<RunningPikachu> createState() => _RunningPikachuState();
@@ -52,6 +54,7 @@ class _RunningPikachuState extends State<RunningPikachu>
         return Positioned(
           left: left,
           bottom: widget.bottom,
+          top: 0,
           child: Transform(
             alignment: Alignment.center,
             transform: Matrix4.identity()..scale(flipX ? -1.0 : 1.0, 1.0),

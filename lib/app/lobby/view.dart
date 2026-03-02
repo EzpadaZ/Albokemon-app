@@ -220,7 +220,7 @@ class _LobbyViewState extends State<LobbyView> {
               filterQuality: FilterQuality.none,
             ),
           ),
-          const RunningPikachu(bottom: 10, size: 64),
+          const RunningPikachu(bottom: -64,  size: 64),
         ],
       ),
     );
