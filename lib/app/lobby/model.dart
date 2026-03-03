@@ -23,6 +23,9 @@ class LobbyViewModel extends ChangeNotifier {
   String? error;
 
   bool _inviteActionInFlight = false;
+  String? _lastRequestedTargetId;
+
+  bool get isInviteBusy => _inviteActionInFlight;
 
   LobbyViewModel() {
     _onUsers = (dynamic data) {
@@ -38,19 +41,24 @@ class LobbyViewModel extends ChangeNotifier {
     };
 
     _onMatchDeclined = (dynamic data) {
-      final payload = _unwrap(data);
-      if (payload is! Map) return;
+      if (data is! Map) return;
 
-      final reason = payload["reason"]?.toString();
+      final byUserId = data["byUserId"]?.toString();
+      final reason = data["reason"]?.toString();
 
       Logger.instance.info('Match declined: $reason');
 
-      // if you were showing an invite modal, close/clear it
       pendingInvite = {};
-      sentInvites.removeLast();
+
+      // ✅ safe: remove the correct entry if present
+      if (byUserId != null) {
+        sentInvites.remove(byUserId);
+      } else if (sentInvites.isNotEmpty) {
+        sentInvites.removeLast();
+      }
+
       notifyListeners();
     };
-
     _onMatchInvite = (dynamic data) {
       final payload = _unwrap(data);
       if (payload is! Map) return;
@@ -64,32 +72,39 @@ class LobbyViewModel extends ChangeNotifier {
 
     // NEW: match start
     _onMatchStart = (dynamic data) {
-      final payload = _unwrap(data);
-      if (payload is! Map) return;
+      if (data is! Map) return;
+      matchStart = Map<String, dynamic>.from(data);
 
-      matchStart = Map<String, dynamic>.from(payload);
+      _inviteActionInFlight = false;
+      pendingInvite = {}; // closes modal in your view logic
       notifyListeners();
     };
 
-    // NEW: error channel
     _onErr = (dynamic data) {
-      final payload = _unwrap(data);
-      error = payload is Map
-          ? (payload["msg"]?.toString() ?? payload.toString())
-          : payload.toString();
-      Logger.instance.error("ERROR ::", payload);
+      if (data is! Map) return;
 
-      if (payload['code'] == "IN_MATCH") {
-        sentInvites = [];
-        ScaffoldMessenger.of(Nav.routeObserver.navigator!.context).showSnackBar(
-          SnackBar(
-            content: DefaultTextStyle.merge(
-              style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH, color: ATheme.BACKGROUND_COLOR),
-              child: Text('User is in match!'),
-            ),
-          ),
-        );
+      final code = data['code']?.toString() ?? '';
+      final msg = data['msg']?.toString() ?? 'Error';
+
+      final attempted = _lastRequestedTargetId;
+
+      // ✅ If you tried to send a second invite, undo only that attempted loader
+      if (code == 'YOU_BUSY' ||
+          code == 'TARGET_BUSY' ||
+          code == 'OFFLINE' ||
+          code == 'IN_MATCH') {
+        if (attempted != null) sentInvites.remove(attempted);
       }
+
+      Nav.messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(
+            msg,
+            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
+          ),
+        ),
+      );
+
       notifyListeners();
     };
 
@@ -106,16 +121,16 @@ class LobbyViewModel extends ChangeNotifier {
   }
 
   void requestMatch(String targetUserId) {
-    try {
-      GameManager.instance.socket.emit(SocketEvents.matchRequest, {
-        "targetUserId": targetUserId,
-      });
-      sentInvites.add(targetUserId);
-    } catch (e) {
-      error = e.toString();
-      Logger.instance.error("Match request error: $error");
+    _lastRequestedTargetId = targetUserId;
+
+    if (!sentInvites.contains(targetUserId)) {
+      sentInvites.add(targetUserId); // optimistic UI
       notifyListeners();
     }
+
+    GameManager.instance.socket.emit(SocketEvents.matchRequest, {
+      "targetUserId": targetUserId,
+    });
   }
 
   void acceptInvite() {
@@ -129,14 +144,11 @@ class LobbyViewModel extends ChangeNotifier {
 
     _inviteActionInFlight = true;
 
-    pendingInvite = {};
     notifyListeners();
 
     GameManager.instance.socket.emit(SocketEvents.matchAccept, {
       "fromUserId": fromUserId,
     });
-
-    _inviteActionInFlight = false;
   }
 
   void declineInvite() {

@@ -27,6 +27,8 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           navigatorObservers: [Nav.routeObserver],
           locale: GameManager.instance.locale,
+          navigatorKey: Nav.navigatorKey,
+          scaffoldMessengerKey: Nav.messengerKey,
           localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

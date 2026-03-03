@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class Nav {
 
   static RouteObserver<ModalRoute<dynamic>> routeObserver = RouteObserver<ModalRoute<dynamic>>();
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   static navigateToWidget({required Widget view, BuildContext? context}) {
     try {
