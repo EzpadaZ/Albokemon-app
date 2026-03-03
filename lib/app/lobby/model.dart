@@ -23,6 +23,7 @@ class LobbyViewModel extends ChangeNotifier {
   String? error;
 
   bool _inviteActionInFlight = false;
+  String? _lastRequestedTargetId;
 
   bool get isInviteBusy => _inviteActionInFlight;
 
@@ -40,20 +41,24 @@ class LobbyViewModel extends ChangeNotifier {
     };
 
     _onMatchDeclined = (dynamic data) {
-      final payload = _unwrap(data);
-      if (payload is! Map) return;
+      if (data is! Map) return;
 
-      final reason = payload["reason"]?.toString();
+      final byUserId = data["byUserId"]?.toString();
+      final reason = data["reason"]?.toString();
 
       Logger.instance.info('Match declined: $reason');
 
-      // if you were showing an invite modal, close/clear it
       pendingInvite = {};
-      _inviteActionInFlight = false;
-      sentInvites.removeLast();
+
+      // ✅ safe: remove the correct entry if present
+      if (byUserId != null) {
+        sentInvites.remove(byUserId);
+      } else if (sentInvites.isNotEmpty) {
+        sentInvites.removeLast();
+      }
+
       notifyListeners();
     };
-
     _onMatchInvite = (dynamic data) {
       final payload = _unwrap(data);
       if (payload is! Map) return;
@@ -75,22 +80,27 @@ class LobbyViewModel extends ChangeNotifier {
       notifyListeners();
     };
 
-    // NEW: error channel
     _onErr = (dynamic data) {
       if (data is! Map) return;
 
       final code = data['code']?.toString() ?? '';
       final msg = data['msg']?.toString() ?? 'Error';
 
-      // stop spinner / pending state
-      sentInvites.clear();
+      final attempted = _lastRequestedTargetId;
 
-      // show snackbar
+      // ✅ If you tried to send a second invite, undo only that attempted loader
+      if (code == 'YOU_BUSY' ||
+          code == 'TARGET_BUSY' ||
+          code == 'OFFLINE' ||
+          code == 'IN_MATCH') {
+        if (attempted != null) sentInvites.remove(attempted);
+      }
+
       Nav.messengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text(
             msg,
-            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH, color: Colors.white),
+            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH),
           ),
         ),
       );
@@ -111,16 +121,16 @@ class LobbyViewModel extends ChangeNotifier {
   }
 
   void requestMatch(String targetUserId) {
-    try {
-      GameManager.instance.socket.emit(SocketEvents.matchRequest, {
-        "targetUserId": targetUserId,
-      });
-      sentInvites.add(targetUserId);
-    } catch (e) {
-      error = e.toString();
-      Logger.instance.error("Match request error: $error");
+    _lastRequestedTargetId = targetUserId;
+
+    if (!sentInvites.contains(targetUserId)) {
+      sentInvites.add(targetUserId); // optimistic UI
       notifyListeners();
     }
+
+    GameManager.instance.socket.emit(SocketEvents.matchRequest, {
+      "targetUserId": targetUserId,
+    });
   }
 
   void acceptInvite() {
