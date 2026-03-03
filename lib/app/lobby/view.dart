@@ -27,7 +27,6 @@ class LobbyView extends StatefulWidget {
 class _LobbyViewState extends State<LobbyView> {
   late LobbyViewModel _model;
   bool _isInviteModalDisplayed = false;
-  bool _isMatchStarting = false;
   BuildContext? _inviteCtx;
 
   void _openInviteModal() {
@@ -38,8 +37,11 @@ class _LobbyViewState extends State<LobbyView> {
       context,
       childWidget: Builder(
         builder: (ctx) {
-          _inviteCtx = ctx; // context inside the dialog
-          return invite();
+          _inviteCtx = ctx;
+          return AnimatedBuilder(
+            animation: _model,
+            builder: (_, __) => invite(), // rebuilds when _model.notifyListeners()
+          );
         },
       ),
     );
@@ -244,6 +246,7 @@ class _LobbyViewState extends State<LobbyView> {
             label: context.i18n.lobby_invite_accept,
             width: 128,
             height: 42,
+            isEnabled: !_model.isInviteBusy,
             onTap: () {
               HapticFeedback.mediumImpact();
               Audio.instance.playSfx('assets/sfx/button_click.wav');
@@ -258,6 +261,7 @@ class _LobbyViewState extends State<LobbyView> {
             label: context.i18n.lobby_invite_reject,
             width: 128,
             height: 42,
+            isEnabled: !_model.isInviteBusy,
             onTap: () {
               HapticFeedback.mediumImpact();
               Audio.instance.playSfx('assets/sfx/button_click.wav');
