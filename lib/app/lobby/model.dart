@@ -23,6 +23,7 @@ class LobbyViewModel extends ChangeNotifier {
   String? error;
 
   bool _inviteActionInFlight = false;
+
   bool get isInviteBusy => _inviteActionInFlight;
 
   LobbyViewModel() {
@@ -76,23 +77,24 @@ class LobbyViewModel extends ChangeNotifier {
 
     // NEW: error channel
     _onErr = (dynamic data) {
-      final payload = _unwrap(data);
-      error = payload is Map
-          ? (payload["msg"]?.toString() ?? payload.toString())
-          : payload.toString();
-      Logger.instance.error("ERROR ::", payload);
+      if (data is! Map) return;
 
-      if (payload['code'] == "IN_MATCH") {
-        sentInvites = [];
-        ScaffoldMessenger.of(Nav.routeObserver.navigator!.context).showSnackBar(
-          SnackBar(
-            content: DefaultTextStyle.merge(
-              style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH, color: ATheme.BACKGROUND_COLOR),
-              child: Text('User is in match!'),
-            ),
+      final code = data['code']?.toString() ?? '';
+      final msg = data['msg']?.toString() ?? 'Error';
+
+      // stop spinner / pending state
+      sentInvites.clear();
+
+      // show snackbar
+      Nav.messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(
+            msg,
+            style: ATheme.textStyle(size: FONT_SIZE.PARAGRAPH, color: Colors.white),
           ),
-        );
-      }
+        ),
+      );
+
       notifyListeners();
     };
 
