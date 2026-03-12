@@ -1,3 +1,7 @@
+# Archive Notice
+
+When this goes up the backend service has been taken down, if you need to test it please run the backend with the instructions in its (own repository)[https://github.com/EzpadaZ/Albokemon-backend].
+
 # Albokemon App (Flutter)
 
 Albokemon is a small Pokémon-style demo app built with **Flutter**.  
