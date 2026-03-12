@@ -1,6 +1,7 @@
-# Archive Notice
-
-When this goes up the backend service has been taken down, if you need to test it please run the backend with the instructions in its (own repository)[https://github.com/EzpadaZ/Albokemon-backend].
+> [!WARNING]
+> # Archive Notice
+> The backend service for this project has been taken down.
+> To test it, please run the backend locally by following the instructions in its [repository](https://github.com/EzpadaZ/Albokemon-backend).
 
 # Albokemon App (Flutter)
 
